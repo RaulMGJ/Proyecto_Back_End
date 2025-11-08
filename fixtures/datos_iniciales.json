@@ -145,8 +145,8 @@
     "model": "productos.producto",
     "pk": 1,
     "fields": {
-      "nombre": "Chocolate Hershey's",
-      "descripcion": "Chocolate de leche Hershey's 43g",
+      "nombre": "Alfajor de Chocolate",
+      "descripcion": "Alfajor relleno de dulce de leche cubierto con chocolate",
       "precio_referencia": 2500
     }
   },
@@ -154,36 +154,441 @@
     "model": "productos.producto",
     "pk": 2,
     "fields": {
-      "nombre": "Gomitas Trululu",
-      "descripcion": "Gomitas de colores sabor fresa 50g",
-      "precio_referencia": 1800
+      "nombre": "Alfajor Triple de Chocolate",
+      "descripcion": "Tres capas de galletitas con dulce de leche y chocolate",
+      "precio_referencia": 3200
     }
   },
   {
     "model": "productos.producto",
     "pk": 3,
     "fields": {
-      "nombre": "Caramelos Mentitas",
-      "descripcion": "Caramelos de menta refrescante 40g",
-      "precio_referencia": 1200
+      "nombre": "Alfajor de Maicena",
+      "descripcion": "Suave alfajor de maicena con dulce de leche y coco",
+      "precio_referencia": 2800
     }
   },
   {
     "model": "productos.producto",
     "pk": 4,
     "fields": {
-      "nombre": "Chicles Bubbaloo",
-      "descripcion": "Chicles con centro líquido sabor fresa 25g",
-      "precio_referencia": 2200
+      "nombre": "Alfajor Blanco",
+      "descripcion": "Alfajor cubierto con chocolate blanco premium",
+      "precio_referencia": 3000
     }
   },
   {
     "model": "productos.producto",
     "pk": 5,
     "fields": {
-      "nombre": "Galletas Oreo",
-      "descripcion": "Galletas sándwich con crema de vainilla 150g",
+      "nombre": "Alfajor de Nuez",
+      "descripcion": "Alfajor artesanal con trozos de nuez y dulce de leche",
+      "precio_referencia": 3500
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 6,
+    "fields": {
+      "nombre": "Trufa de Chocolate Amargo",
+      "descripcion": "Trufa premium de chocolate amargo 70% cacao",
       "precio_referencia": 4200
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 7,
+    "fields": {
+      "nombre": "Trufa de Chocolate con Leche",
+      "descripcion": "Trufa suave de chocolate con leche",
+      "precio_referencia": 3800
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 8,
+    "fields": {
+      "nombre": "Trufa de Champagne",
+      "descripcion": "Trufa elegante con toque de champagne",
+      "precio_referencia": 4800
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 9,
+    "fields": {
+      "nombre": "Trufa de Café",
+      "descripcion": "Trufa de chocolate con café expreso",
+      "precio_referencia": 4500
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 10,
+    "fields": {
+      "nombre": "Trufa de Frambuesa",
+      "descripcion": "Trufa de chocolate rellena de frambuesa natural",
+      "precio_referencia": 5000
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 11,
+    "fields": {
+      "nombre": "Bombón de Chocolate Negro",
+      "descripcion": "Bombón fino de chocolate negro con relleno cremoso",
+      "precio_referencia": 3600
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 12,
+    "fields": {
+      "nombre": "Bombón de Licor",
+      "descripcion": "Bombón relleno de licor de cereza",
+      "precio_referencia": 4200
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 13,
+    "fields": {
+      "nombre": "Bombón de Caramelo Salado",
+      "descripcion": "Bombón de chocolate con caramelo salado",
+      "precio_referencia": 3900
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 14,
+    "fields": {
+      "nombre": "Bombón de Avellana",
+      "descripcion": "Bombón relleno de crema de avellanas",
+      "precio_referencia": 4000
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 15,
+    "fields": {
+      "nombre": "Bombón de Menta",
+      "descripcion": "Bombón de chocolate con relleno de menta",
+      "precio_referencia": 3500
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 16,
+    "fields": {
+      "nombre": "Alfajor de Coco",
+      "descripcion": "Alfajor tradicional bañado en coco rallado",
+      "precio_referencia": 2600
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 17,
+    "fields": {
+      "nombre": "Alfajor Marplatense",
+      "descripcion": "Alfajor estilo Mar del Plata con dulce de leche",
+      "precio_referencia": 3100
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 18,
+    "fields": {
+      "nombre": "Alfajor de Fruta",
+      "descripcion": "Alfajor relleno de mermelada de frutos rojos",
+      "precio_referencia": 2900
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 19,
+    "fields": {
+      "nombre": "Alfajor Santafesino",
+      "descripcion": "Alfajor artesanal estilo Santa Fe triple",
+      "precio_referencia": 3400
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 20,
+    "fields": {
+      "nombre": "Alfajor de Mousse",
+      "descripcion": "Alfajor con mousse de chocolate",
+      "precio_referencia": 3300
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 21,
+    "fields": {
+      "nombre": "Trufa de Pistacho",
+      "descripcion": "Trufa de chocolate blanco con pistacho",
+      "precio_referencia": 5200
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 22,
+    "fields": {
+      "nombre": "Trufa de Naranja",
+      "descripcion": "Trufa de chocolate con esencia de naranja",
+      "precio_referencia": 4400
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 23,
+    "fields": {
+      "nombre": "Trufa de Té Verde",
+      "descripcion": "Trufa de chocolate blanco con té matcha",
+      "precio_referencia": 4900
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 24,
+    "fields": {
+      "nombre": "Trufa de Coco",
+      "descripcion": "Trufa de chocolate con coco natural",
+      "precio_referencia": 4300
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 25,
+    "fields": {
+      "nombre": "Trufa de Vainilla",
+      "descripcion": "Trufa de chocolate blanco con vainilla de Madagascar",
+      "precio_referencia": 4600
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 26,
+    "fields": {
+      "nombre": "Bombón de Dulce de Leche",
+      "descripcion": "Bombón relleno de dulce de leche argentino",
+      "precio_referencia": 3700
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 27,
+    "fields": {
+      "nombre": "Bombón de Maracuyá",
+      "descripcion": "Bombón tropical con relleno de maracuyá",
+      "precio_referencia": 4100
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 28,
+    "fields": {
+      "nombre": "Bombón de Cereza",
+      "descripcion": "Bombón con cereza confitada al centro",
+      "precio_referencia": 3800
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 29,
+    "fields": {
+      "nombre": "Bombón de Almendra",
+      "descripcion": "Bombón con almendra tostada y chocolate",
+      "precio_referencia": 4000
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 30,
+    "fields": {
+      "nombre": "Bombón de Ron",
+      "descripcion": "Bombón fino con relleno de ron añejo",
+      "precio_referencia": 4500
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 31,
+    "fields": {
+      "nombre": "Alfajor Gourmet Premium",
+      "descripcion": "Alfajor artesanal con chocolate belga",
+      "precio_referencia": 4200
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 32,
+    "fields": {
+      "nombre": "Alfajor de Almendra",
+      "descripcion": "Alfajor con harina de almendra sin azúcar",
+      "precio_referencia": 3800
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 33,
+    "fields": {
+      "nombre": "Alfajor Negro",
+      "descripcion": "Alfajor con galletas de cacao y chocolate negro",
+      "precio_referencia": 3300
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 34,
+    "fields": {
+      "nombre": "Alfajor de Limón",
+      "descripcion": "Alfajor relleno de crema de limón",
+      "precio_referencia": 2700
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 35,
+    "fields": {
+      "nombre": "Alfajor de Membrillo",
+      "descripcion": "Alfajor tradicional con dulce de membrillo",
+      "precio_referencia": 2800
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 36,
+    "fields": {
+      "nombre": "Trufa de Miel",
+      "descripcion": "Trufa de chocolate con miel de abeja pura",
+      "precio_referencia": 4700
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 37,
+    "fields": {
+      "nombre": "Trufa de Canela",
+      "descripcion": "Trufa especiada con canela de Ceylán",
+      "precio_referencia": 4400
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 38,
+    "fields": {
+      "nombre": "Trufa de Jengibre",
+      "descripcion": "Trufa de chocolate con jengibre confitado",
+      "precio_referencia": 4600
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 39,
+    "fields": {
+      "nombre": "Trufa de Baileys",
+      "descripcion": "Trufa cremosa con licor de crema irlandés",
+      "precio_referencia": 5100
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 40,
+    "fields": {
+      "nombre": "Trufa de Macadamia",
+      "descripcion": "Trufa premium con nueces de macadamia",
+      "precio_referencia": 5500
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 41,
+    "fields": {
+      "nombre": "Bombón de Mango",
+      "descripcion": "Bombón tropical con pulpa de mango",
+      "precio_referencia": 4200
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 42,
+    "fields": {
+      "nombre": "Bombón de Whisky",
+      "descripcion": "Bombón para adultos con whisky escocés",
+      "precio_referencia": 4800
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 43,
+    "fields": {
+      "nombre": "Bombón de Fresa",
+      "descripcion": "Bombón relleno de crema de fresa natural",
+      "precio_referencia": 3900
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 44,
+    "fields": {
+      "nombre": "Bombón de Praliné",
+      "descripcion": "Bombón clásico con praliné de avellanas",
+      "precio_referencia": 4300
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 45,
+    "fields": {
+      "nombre": "Bombón de Toffee",
+      "descripcion": "Bombón con caramelo inglés toffee",
+      "precio_referencia": 3700
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 46,
+    "fields": {
+      "nombre": "Alfajor de Café",
+      "descripcion": "Alfajor con dulce de leche y café",
+      "precio_referencia": 3000
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 47,
+    "fields": {
+      "nombre": "Alfajor de Tiramisú",
+      "descripcion": "Alfajor inspirado en el postre italiano",
+      "precio_referencia": 3600
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 48,
+    "fields": {
+      "nombre": "Alfajor Red Velvet",
+      "descripcion": "Alfajor de terciopelo rojo con queso crema",
+      "precio_referencia": 3900
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 49,
+    "fields": {
+      "nombre": "Alfajor de Brownie",
+      "descripcion": "Alfajor con capas de brownie y chocolate",
+      "precio_referencia": 3500
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 50,
+    "fields": {
+      "nombre": "Alfajor de Cookies & Cream",
+      "descripcion": "Alfajor con galletas oreo trituradas",
+      "precio_referencia": 3400
     }
   },
   {

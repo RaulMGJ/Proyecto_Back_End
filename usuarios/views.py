@@ -70,7 +70,7 @@ def lista_usuarios(request):
         'total_usuarios': Usuario.objects.count(),
         'usuarios_activos': Usuario.objects.filter(is_active=True).count(),
     }
-    return render(request, 'usuarios/lista_usuarios.html', context)
+    return render(request, 'dashboard/usuarios.html', context)
 
 @login_required
 @staff_member_required
@@ -123,7 +123,7 @@ def agregar_usuario(request):
         'title': 'Agregar Usuario',
         'action': 'agregar'
     }
-    return render(request, 'usuarios/form_usuario.html', context)
+    return render(request, 'dashboard/form_usuario.html', context)
 
 @login_required
 @staff_member_required
@@ -151,7 +151,7 @@ def editar_usuario(request, usuario_id):
         'title': 'Editar Usuario',
         'action': 'editar'
     }
-    return render(request, 'usuarios/form_usuario.html', context)
+    return render(request, 'dashboard/form_usuario.html', context)
 
 @login_required
 @staff_member_required

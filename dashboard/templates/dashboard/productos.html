@@ -115,42 +115,100 @@
     <!-- Filters Card -->
     <div class="lilis-card mb-4">
         <div class="lilis-card-body">
-            <h5 class="card-title mb-3">
-                <i class="bi bi-funnel me-2"></i>
+            <h5 class="mb-3">
+                <i class="bi bi-search me-2"></i>
                 Buscar productos
             </h5>
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <input type="text" class="lilis-form-control" id="searchProduct" placeholder="Buscar por SKU o nombre...">
+            
+            <form method="get" id="searchForm">
+                <div class="row g-3 align-items-end">
+                    <!-- Buscador -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold mb-2">
+                            <i class="bi bi-filter me-1"></i>
+                            Buscar por nombre, descripción o precio
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" 
+                                   class="form-control" 
+                                   name="search" 
+                                   id="searchProduct" 
+                                   placeholder="Escribe para buscar..."
+                                   value="{{ search }}">
+                            {% if search %}
+                            <a href="{% url 'productos:lista_productos' %}" 
+                               class="btn btn-outline-secondary"
+                               title="Limpiar búsqueda">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Registros por página -->
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold mb-2">
+                            <i class="bi bi-list-ol me-1"></i>
+                            Registros por página
+                        </label>
+                        <select class="form-select" id="perPageSelect" onchange="changePerPage(this.value)">
+                            <option value="5" {% if per_page == 5 %}selected{% endif %}>5 registros</option>
+                            <option value="10" {% if per_page == 10 %}selected{% endif %}>10 registros</option>
+                            <option value="15" {% if per_page == 15 %}selected{% endif %}>15 registros</option>
+                            <option value="30" {% if per_page == 30 %}selected{% endif %}>30 registros</option>
+                            <option value="50" {% if per_page == 50 %}selected{% endif %}>50 registros</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Ordenar por -->
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold mb-2">
+                            <i class="bi bi-sort-alpha-down me-1"></i>
+                            Ordenar por
+                        </label>
+                        <select class="form-select" id="orderBySelect" onchange="changeOrderBy(this.value)">
+                            <option value="id_producto" {% if order_by == 'id_producto' %}selected{% endif %}>ID</option>
+                            <option value="nombre" {% if order_by == 'nombre' %}selected{% endif %}>Nombre</option>
+                            <option value="precio_referencia" {% if order_by == 'precio_referencia' %}selected{% endif %}>Precio</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Dirección de orden -->
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold mb-2">
+                            <i class="bi bi-arrow-down-up me-1"></i>
+                            Dirección
+                        </label>
+                        <button type="button" 
+                                class="btn w-100" 
+                                style="background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; font-weight: 600;"
+                                onclick="toggleOrderDirection()" 
+                                id="orderDirectionBtn">
+                            <i class="bi bi-sort-{% if order_direction == 'desc' %}down{% else %}up{% endif %} me-2"></i>
+                            {% if order_direction == 'desc' %}Descendente{% else %}Ascendente{% endif %}
+                        </button>
+                    </div>
                 </div>
-                <div class="col-md-2">
-                    <select class="lilis-form-control" id="filterCategory">
-                        <option value="">Todas las categorías</option>
-                        {% for categoria in categorias %}
-                        <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <select class="lilis-form-control" id="filterStatus">
-                        <option value="">Todos los estados</option>
-                        <option value="activo">Activo</option>
-                        <option value="inactivo">Inactivo</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <select class="lilis-form-control" id="filterStock">
-                        <option value="">Todo el stock</option>
-                        <option value="bajo">Stock bajo</option>
-                        <option value="normal">Stock normal</option>
-                        <option value="alto">Stock alto</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button class="btn btn-outline-success w-100" onclick="exportToExcel()">
-                        <i class="bi bi-file-excel me-1"></i>
+            </form>
+            
+            <!-- Información y botón exportar -->
+            <div class="row mt-4 pt-3 border-top">
+                <div class="col-md-6 d-flex align-items-center">
+                    <button class="btn btn-outline-success" onclick="exportToExcel()">
+                        <i class="bi bi-file-earmark-excel me-2"></i>
                         Exportar a Excel
                     </button>
+                </div>
+                <div class="col-md-6 text-end">
+                    <span class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Mostrando 
+                        <strong>{{ productos.start_index }}</strong> - <strong>{{ productos.end_index }}</strong> 
+                        de <strong>{{ productos.paginator.count }}</strong> productos
+                    </span>
                 </div>
             </div>
         </div>
@@ -163,70 +221,97 @@
                 <i class="bi bi-list me-2"></i>
                 Lista de Productos
             </h5>
-            <span class="badge bg-secondary" id="productCount">{{ productos.count|default:0 }} productos</span>
+            <span class="badge bg-secondary">{{ productos.paginator.count }} productos totales</span>
         </div>
         
         <div class="table-responsive">
             <table class="table table-hover mb-0" id="productsTable">
                 <thead class="table-light">
                     <tr>
-                        <th scope="col">SKU</th>
-                        <th scope="col">Nombre</th>
-                        <th scope="col">Stock</th>
-                        <th scope="col">Acciones</th>
+                        <th scope="col" style="cursor: pointer;" onclick="sortTable('id_producto')">
+                            <i class="bi bi-hash me-1"></i>ID
+                            {% if order_by == 'id_producto' %}
+                                <i class="bi bi-caret-{% if order_direction == 'desc' %}down{% else %}up{% endif %}-fill"></i>
+                            {% endif %}
+                        </th>
+                        <th scope="col" style="cursor: pointer;" onclick="sortTable('nombre')">
+                            <i class="bi bi-tag me-1"></i>Nombre
+                            {% if order_by == 'nombre' %}
+                                <i class="bi bi-caret-{% if order_direction == 'desc' %}down{% else %}up{% endif %}-fill"></i>
+                            {% endif %}
+                        </th>
+                        <th scope="col">
+                            <i class="bi bi-file-text me-1"></i>Descripción
+                        </th>
+                        <th scope="col" style="cursor: pointer;" onclick="sortTable('precio_referencia')">
+                            <i class="bi bi-currency-dollar me-1"></i>Precio
+                            {% if order_by == 'precio_referencia' %}
+                                <i class="bi bi-caret-{% if order_direction == 'desc' %}down{% else %}up{% endif %}-fill"></i>
+                            {% endif %}
+                        </th>
+                        <th scope="col" class="text-center">
+                            <i class="bi bi-gear me-1"></i>Acciones
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for producto in productos %}
                     <tr data-product-id="{{ producto.id_producto }}">
                         <td>
-                            <div class="d-flex align-items-center">
-                                <div class="product-image me-2 d-flex align-items-center justify-content-center">
-                                    <i class="bi bi-box text-muted"></i>
-                                </div>
-                                <div>
-                                    <strong>SKU-{{ producto.id_producto|stringformat:"04d" }}</strong>
-                                    <div class="small text-muted">Producto ID: {{ producto.id_producto }}</div>
-                                </div>
-                            </div>
+                            <span class="badge" style="background: linear-gradient(135deg, #dc2626, #b91c1c); font-size: 0.9rem;">
+                                #{{ producto.id_producto }}
+                            </span>
                         </td>
                         <td>
-                            <div>
-                                <strong>{{ producto.nombre }}</strong>
-                                <div class="small text-muted">{{ producto.descripcion|truncatechars:50 }}</div>
-                            </div>
+                            <strong>{{ producto.nombre }}</strong>
                         </td>
                         <td>
-                            <div class="d-flex align-items-center">
-                                <div class="me-2">
-                                    <strong>N/A</strong>
-                                    <small class="text-muted">Ver inventario</small>
-                                </div>
-                            </div>
+                            <span class="text-muted">{{ producto.descripcion|default:"Sin descripción"|truncatechars:50 }}</span>
                         </td>
                         <td>
-                            <div class="product-actions">
-                                {% if user.is_superuser or user.id_rol.nombre == 'Administrador' %}
-                                    <a href="{% url 'dashboard:editar_producto' producto.id_producto %}" class="btn btn-outline-primary btn-sm" title="Editar">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                {% endif %}
-                                <button class="btn btn-outline-info btn-sm" onclick="viewProduct('{{ producto.id_producto }}')" title="Ver detalles">
+                            <span class="badge bg-success" style="font-size: 0.9rem;">
+                                S/ {{ producto.precio_referencia|floatformat:2 }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="product-actions d-flex justify-content-center gap-1">
+                                <a href="{% url 'productos:editar_producto' producto.id_producto %}" 
+                                   class="btn btn-sm" 
+                                   style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;"
+                                   title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button class="btn btn-sm btn-outline-info" 
+                                        onclick="viewProduct('{{ producto.id_producto }}')" 
+                                        title="Ver detalles">
                                     <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" 
+                                        onclick="deleteProduct('{{ producto.id_producto }}')" 
+                                        title="Eliminar">
+                                    <i class="bi bi-trash"></i>
                                 </button>
                             </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4" class="text-center py-5">
+                        <td colspan="5" class="text-center py-5">
                             <div class="text-muted">
                                 <i class="bi bi-box-seam display-4 d-block mb-3" style="color: var(--lilis-gray-300);"></i>
-                                <p class="mb-3">No se encontraron productos</p>
-                                <button class="btn btn-lilis-primary" onclick="openProductForm()">
-                                    <i class="bi bi-plus-circle me-2"></i>
-                                    Crear primer producto
-                                </button>
+                                {% if search %}
+                                    <p class="mb-3">No se encontraron productos que coincidan con "{{ search }}"</p>
+                                    <a href="{% url 'productos:lista_productos' %}" class="btn btn-lilis-primary">
+                                        <i class="bi bi-arrow-left me-2"></i>
+                                        Ver todos los productos
+                                    </a>
+                                {% else %}
+                                    <p class="mb-3">No hay productos registrados</p>
+                                    <a href="{% url 'productos:agregar_producto' %}" class="btn btn-lilis-primary">
+                                        <i class="bi bi-plus-circle me-2"></i>
+                                        Crear primer producto
+                                    </a>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>
@@ -234,110 +319,219 @@
                 </tbody>
             </table>
         </div>
+        
+        <!-- Paginación -->
+        {% if productos.has_other_pages %}
+        <div class="card-footer bg-light">
+            <nav aria-label="Paginación de productos">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if productos.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}&per_page={{ per_page }}&order_by={{ order_by }}&order_direction={{ order_direction }}">
+                                <i class="bi bi-chevron-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ productos.previous_page_number }}{% if search %}&search={{ search }}{% endif %}&per_page={{ per_page }}&order_by={{ order_by }}&order_direction={{ order_direction }}">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in productos.paginator.page_range %}
+                        {% if productos.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link" style="background: linear-gradient(135deg, #dc2626, #b91c1c); border-color: #dc2626;">{{ num }}</span>
+                            </li>
+                        {% elif num > productos.number|add:'-3' and num < productos.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}&per_page={{ per_page }}&order_by={{ order_by }}&order_direction={{ order_direction }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if productos.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ productos.next_page_number }}{% if search %}&search={{ search }}{% endif %}&per_page={{ per_page }}&order_by={{ order_by }}&order_direction={{ order_direction }}">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ productos.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}&per_page={{ per_page }}&order_by={{ order_by }}&order_direction={{ order_direction }}">
+                                <i class="bi bi-chevron-double-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Product Management Functions
-    function openProductForm() {
-        // Redirigir al formulario de producto
-        window.location.href = "{% url 'dashboard:agregar_producto' %}";
+    // Cambiar cantidad de registros por página
+    function changePerPage(value) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('per_page', value);
+        url.searchParams.set('page', '1'); // Resetear a primera página
+        window.location.href = url.toString();
     }
     
-    function editProduct(productId) {
-        // Redirigir al formulario de edición
-        window.location.href = `/productos/editar/${productId}/`;
+    // Cambiar campo de ordenamiento
+    function changeOrderBy(value) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('order_by', value);
+        url.searchParams.set('page', '1'); // Resetear a primera página
+        window.location.href = url.toString();
     }
     
+    // Alternar dirección de ordenamiento
+    function toggleOrderDirection() {
+        const url = new URL(window.location.href);
+        const currentDirection = url.searchParams.get('order_direction') || 'desc';
+        const newDirection = currentDirection === 'desc' ? 'asc' : 'desc';
+        url.searchParams.set('order_direction', newDirection);
+        url.searchParams.set('page', '1'); // Resetear a primera página
+        window.location.href = url.toString();
+    }
+    
+    // Ordenar tabla al hacer clic en encabezado
+    function sortTable(field) {
+        const url = new URL(window.location.href);
+        const currentField = url.searchParams.get('order_by') || 'id_producto';
+        const currentDirection = url.searchParams.get('order_direction') || 'desc';
+        
+        // Si es el mismo campo, alternar dirección
+        if (currentField === field) {
+            const newDirection = currentDirection === 'desc' ? 'asc' : 'desc';
+            url.searchParams.set('order_direction', newDirection);
+        } else {
+            // Nuevo campo, ordenar descendente por defecto
+            url.searchParams.set('order_by', field);
+            url.searchParams.set('order_direction', 'desc');
+        }
+        
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
+    }
+    
+    // Ver detalles del producto
     function viewProduct(productId) {
-        LilisSystem.showAlert('Funcionalidad de vista detallada en desarrollo', 'info');
+        alert('Vista de detalles del producto #' + productId + ' en desarrollo');
     }
     
+    // Eliminar producto
     function deleteProduct(productId) {
-        if (LilisSystem.confirmDelete('¿Estás seguro de que deseas eliminar este producto?\n\nEsta acción no se puede deshacer.')) {
-            // Implementar eliminación via AJAX
-            console.log('Eliminando producto:', productId);
-            LilisSystem.showAlert('Producto eliminado correctamente', 'success');
+        if (confirm('¿Estás seguro de que deseas eliminar este producto?\n\nEsta acción no se puede deshacer.')) {
+            // Obtener el token CSRF
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                             getCookie('csrftoken');
             
-            // Remover fila de la tabla
-            const row = document.querySelector(`tr[data-product-id="${productId}"]`);
-            if (row) {
-                row.remove();
-                updateProductCount();
-            }
+            fetch(`/productos/eliminar/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Recargar la página para actualizar la lista
+                    window.location.reload();
+                } else {
+                    alert('Error al eliminar el producto');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al eliminar el producto');
+            });
         }
     }
     
-    // Filter and Search Functions
-    function filterProducts() {
-        const searchTerm = document.getElementById('searchProduct').value.toLowerCase();
-        const categoryFilter = document.getElementById('filterCategory').value;
-        const statusFilter = document.getElementById('filterStatus').value;
-        const stockFilter = document.getElementById('filterStock').value;
+    // Exportar a Excel
+    function exportToExcel() {
+        // Recolectar todos los datos de la tabla
+        const table = document.getElementById('productsTable');
+        const rows = table.querySelectorAll('tbody tr');
         
-        const rows = document.querySelectorAll('#productsTable tbody tr');
-        let visibleCount = 0;
+        if (rows.length === 0 || (rows.length === 1 && rows[0].cells.length < 5)) {
+            alert('No hay datos para exportar');
+            return;
+        }
+        
+        let csvContent = "ID,Nombre,Descripción,Precio\n";
         
         rows.forEach(row => {
-            if (row.cells.length === 1) return; // Skip empty row
-            
-            const sku = row.cells[0].textContent.toLowerCase();
-            const name = row.cells[1].textContent.toLowerCase();
-            const visible = (!searchTerm || sku.includes(searchTerm) || name.includes(searchTerm));
-            
-            if (visible) {
-                row.style.display = '';
-                visibleCount++;
-            } else {
-                row.style.display = 'none';
+            if (row.cells.length >= 5) {
+                const id = row.cells[0].textContent.trim().replace('#', '');
+                const nombre = row.cells[1].textContent.trim();
+                const descripcion = row.cells[2].textContent.trim();
+                const precio = row.cells[3].textContent.trim().replace('S/ ', '');
+                
+                csvContent += `"${id}","${nombre}","${descripcion}","${precio}"\n`;
             }
         });
         
-        updateProductCount(visibleCount);
+        // Crear archivo y descargar
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', `productos_${new Date().toISOString().slice(0,10)}.csv`);
+        link.style.visibility = 'hidden';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        alert('Productos exportados exitosamente');
     }
     
-    function updateProductCount(count = null) {
-        const counter = document.getElementById('productCount');
-        if (count !== null) {
-            counter.textContent = `${count} productos`;
-        } else {
-            const visibleRows = document.querySelectorAll('#productsTable tbody tr:not([style*="display: none"])');
-            const emptyRowExists = visibleRows.length > 0 && visibleRows[0].cells.length === 1;
-            const actualCount = emptyRowExists ? 0 : visibleRows.length;
-            counter.textContent = `${actualCount} productos`;
+    // Función auxiliar para obtener cookie CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
         }
+        return cookieValue;
     }
     
-    function exportToExcel() {
-        LilisSystem.showAlert('Exportando productos a Excel...', 'info');
-        // Implementar exportación
+    // Abrir formulario de nuevo producto
+    function openProductForm() {
+        window.location.href = "{% url 'productos:agregar_producto' %}";
     }
     
-    // Event Listeners
+    // Inicialización
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('Productos página cargada');
+        console.log('Paginación: {{ per_page }} registros por página');
+        console.log('Ordenamiento: {{ order_by }} {{ order_direction }}');
+        
+        // Auto-submit del formulario de búsqueda al escribir (con delay)
+        let searchTimeout;
         const searchInput = document.getElementById('searchProduct');
         if (searchInput) {
-            searchInput.addEventListener('input', filterProducts);
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    document.getElementById('searchForm').submit();
+                }, 500); // Esperar 500ms después de que el usuario deje de escribir
+            });
         }
-        
-        const filterCategory = document.getElementById('filterCategory');
-        if (filterCategory) {
-            filterCategory.addEventListener('change', filterProducts);
-        }
-        
-        const filterStatus = document.getElementById('filterStatus');
-        if (filterStatus) {
-            filterStatus.addEventListener('change', filterProducts);
-        }
-        
-        const filterStock = document.getElementById('filterStock');
-        if (filterStock) {
-            filterStock.addEventListener('change', filterProducts);
-        }
-        
-        console.log('Product management loaded');
     });
 </script>
 {% endblock %}

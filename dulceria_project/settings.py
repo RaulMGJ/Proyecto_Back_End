@@ -65,7 +65,7 @@ ROOT_URLCONF = 'dulceria_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [],  # Todos los templates están en las apps
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

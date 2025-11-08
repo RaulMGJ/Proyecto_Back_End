@@ -49,7 +49,7 @@ def lista_proveedores(request):
         'search': search,
         'total_proveedores': Proveedor.objects.count(),
     }
-    return render(request, 'proveedores/lista_proveedores.html', context)
+    return render(request, 'dashboard/proveedores.html', context)
 
 @login_required
 def form_proveedor(request):
@@ -61,7 +61,7 @@ def form_proveedor(request):
         'proveedores': proveedores,
         'title': 'Formulario de Proveedor'
     }
-    return render(request, 'proveedores/form_proveedor.html', context)
+    return render(request, 'dashboard/form_proveedor.html', context)
 
 @login_required
 def agregar_proveedor(request):
@@ -106,7 +106,7 @@ def agregar_proveedor(request):
         'title': 'Agregar Proveedor',
         'action': 'agregar'
     }
-    return render(request, 'proveedores/form_proveedor.html', context)
+    return render(request, 'dashboard/form_proveedor.html', context)
 
 @login_required
 def editar_proveedor(request, proveedor_id):
@@ -128,7 +128,7 @@ def editar_proveedor(request, proveedor_id):
         'title': 'Editar Proveedor',
         'action': 'editar'
     }
-    return render(request, 'proveedores/form_proveedor.html', context)
+    return render(request, 'dashboard/form_proveedor.html', context)
 
 @login_required
 def eliminar_proveedor(request, proveedor_id):

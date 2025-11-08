@@ -38,26 +38,53 @@ class ProductoForm(forms.ModelForm):
 
 @login_required
 def lista_productos(request):
-    """Vista para listar todos los productos"""
-    productos = Producto.objects.all().order_by('-id_producto')
+    """Vista para listar todos los productos con búsqueda, paginación y ordenamiento"""
+    productos = Producto.objects.all()
     
-    # Búsqueda
+    # Búsqueda por múltiples campos
     search = request.GET.get('search', '')
     if search:
-        productos = productos.filter(nombre__icontains=search)
+        productos = productos.filter(
+            nombre__icontains=search
+        ) | productos.filter(
+            descripcion__icontains=search
+        ) | productos.filter(
+            precio_referencia__icontains=search
+        )
     
-    # Paginación
-    paginator = Paginator(productos, 10)
-    page = request.GET.get('page')
-    productos = paginator.get_page(page)
+    # Ordenamiento
+    order_by = request.GET.get('order_by', '-id_producto')
+    order_direction = request.GET.get('order_direction', 'desc')
+    
+    # Construir el campo de ordenamiento
+    if order_direction == 'desc':
+        order_field = f'-{order_by}' if not order_by.startswith('-') else order_by
+    else:
+        order_field = order_by.replace('-', '')
+    
+    productos = productos.order_by(order_field)
+    
+    # Paginación - obtener de sesión o de parámetro GET
+    per_page = request.GET.get('per_page')
+    if per_page:
+        request.session['productos_per_page'] = int(per_page)
+    else:
+        per_page = request.session.get('productos_per_page', 10)
+    
+    paginator = Paginator(productos, per_page)
+    page = request.GET.get('page', 1)
+    productos_paginados = paginator.get_page(page)
     
     context = {
-        'productos': productos,
+        'productos': productos_paginados,
         'search': search,
+        'order_by': order_by.replace('-', ''),
+        'order_direction': order_direction,
+        'per_page': int(per_page),
         'total_productos': Producto.objects.count(),
         'productos_activos': Producto.objects.filter(activo=True).count(),
     }
-    return render(request, 'productos/lista_productos.html', context)
+    return render(request, 'dashboard/productos.html', context)
 
 @login_required
 def form_producto(request):
@@ -69,7 +96,7 @@ def form_producto(request):
         'productos': productos,
         'title': 'Formulario de Producto'
     }
-    return render(request, 'productos/form_producto.html', context)
+    return render(request, 'dashboard/form_producto.html', context)
 
 @login_required
 def agregar_producto(request):
@@ -114,7 +141,7 @@ def agregar_producto(request):
         'title': 'Agregar Producto',
         'action': 'agregar'
     }
-    return render(request, 'productos/form_producto.html', context)
+    return render(request, 'dashboard/form_producto.html', context)
 
 @login_required
 def editar_producto(request, producto_id):
@@ -136,7 +163,7 @@ def editar_producto(request, producto_id):
         'title': 'Editar Producto',
         'action': 'editar'
     }
-    return render(request, 'productos/form_producto.html', context)
+    return render(request, 'dashboard/form_producto.html', context)
 
 @login_required
 def eliminar_producto(request, producto_id):

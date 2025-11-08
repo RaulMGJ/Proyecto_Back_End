@@ -1,255 +1,698 @@
 {% extends 'dashboard/base.html' %}
 {% load static %}
 
-{% block title %}{% if form.instance.pk %}Editar Producto{% else %}Agregar Producto{% endif %} - Dulcería Lilis{% endblock %}
+{% block title %}{{ title }} - Dulcería Lilis{% endblock %}
 
 {% block extra_css %}
 <style>
-    .form-section {
+    .form-container {
         background: white;
         border-radius: 15px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        border-left: 4px solid var(--lilis-green);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+        overflow: hidden;
     }
     
     .form-header {
-        background: linear-gradient(135deg, var(--lilis-green), var(--lilis-green-dark));
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
         color: white;
-        border-radius: 11px 11px 0 0;
-        margin: -1px -1px 0 -1px;
+        padding: 1.5rem;
+        border-bottom: 3px solid #b91c1c;
     }
     
-    .required-field::after {
-        content: " *";
-        color: var(--lilis-red);
-        font-weight: bold;
+    .products-list-container {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        max-height: 700px;
+        overflow: hidden;
+        border: 1px solid #e9ecef;
     }
     
-    .field-help {
-        font-size: 0.875rem;
-        color: var(--lilis-gray-600);
-        margin-top: 0.25rem;
+    .products-list-header {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        padding: 1rem;
+        border-bottom: 3px solid #dc2626;
+        position: sticky;
+        top: 0;
+        z-index: 10;
     }
     
-    .price-input {
-        position: relative;
+    .products-list-body {
+        max-height: 580px;
+        overflow-y: auto;
     }
     
-    .price-input::before {
-        content: "S/";
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--lilis-gray-600);
+    .product-item {
+        padding: 1rem;
+        border-bottom: 1px solid #f0f0f0;
+        transition: all 0.3s ease;
+    }
+    
+    .product-item:hover {
+        background: #f8f9fa;
+        transform: translateX(5px);
+    }
+    
+    .product-item:last-child {
+        border-bottom: none;
+    }
+    
+    .product-name {
+        font-weight: 600;
+        color: #333;
+        margin: 0;
+        font-size: 0.95rem;
+    }
+    
+    .product-sku {
+        color: #666;
+        margin: 0;
+        font-size: 0.85rem;
+    }
+    
+    .product-stock {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    }
+    
+    .btn-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn-action {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
         font-weight: 500;
-        z-index: 1;
     }
     
-    .price-input input {
-        padding-left: 35px;
+    .btn-edit {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    }
+    
+    .btn-edit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+    
+    .btn-delete {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+    }
+    
+    .btn-delete:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    }
+    
+    .export-btn {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        box-shadow: 0 2px 10px rgba(220, 38, 38, 0.3);
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+    
+    .export-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+    }
+    
+    .form-field {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #1f2937;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #dc2626;
+        box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
+    }
+    
+    .form-select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        background: white;
+        transition: all 0.3s ease;
+    }
+    
+    .form-select:focus {
+        outline: none;
+        border-color: #dc2626;
+        box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
+    }
+    
+    .form-checkbox {
+        margin-right: 0.5rem;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        color: white;
+        border: none;
+        padding: 0.85rem 2.5rem;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        cursor: pointer;
+        margin-right: 0.5rem;
+        box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+        transition: all 0.3s ease;
+        font-weight: 600;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+    }
+    
+    .btn-secondary {
+        background: linear-gradient(135deg, #6b7280, #4b5563);
+        color: white;
+        border: none;
+        padding: 0.85rem 2.5rem;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3);
+        transition: all 0.3s ease;
+        font-weight: 600;
+    }
+    
+    .btn-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(107, 114, 128, 0.4);
+    }
+    
+    .search-container {
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0 1rem;
+    }
+    
+    .search-input {
+        flex-grow: 1;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #dc2626;
+        box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
+    }
+    
+    /* Pasos del formulario */
+    .form-steps {
+        display: flex;
+        margin-bottom: 2rem;
+        background: #f3f4f6;
+        padding: 0.5rem;
+        border-radius: 12px;
+        gap: 0.5rem;
+    }
+    
+    .step {
+        flex: 1;
+        text-align: center;
+        padding: 1rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        color: #6b7280;
+        background: white;
+        border: 2px solid transparent;
+    }
+    
+    .step:hover {
+        color: #dc2626;
+        border-color: #fecaca;
+    }
+    
+    .step.active {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        color: white;
+        box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    .step.completed {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+    }
+    
+    .step-content {
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    .step-content.active {
+        display: block;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 3px solid #dc2626;
+        display: inline-block;
+    }
+    
+    .alert {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    /* Scrollbar personalizada */
+    .products-list-body::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .products-list-body::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .products-list-body::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        border-radius: 10px;
+    }
+    
+    .products-list-body::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, #b91c1c, #991b1b);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="text-dark fw-bold mb-1">
-                <i class="bi bi-{% if form.instance.pk %}pencil-square{% else %}plus-circle{% endif %} text-lilis-green me-2"></i>
-                {% if form.instance.pk %}Editar Producto{% else %}Agregar Nuevo Producto{% endif %}
-            </h2>
-            <p class="text-muted mb-0">
-                {% if form.instance.pk %}
-                    Modifica la información del producto "{{ form.instance.nombre }}"
-                {% else %}
-                    Completa la información para registrar un nuevo producto
-                {% endif %}
-            </p>
-        </div>
-        <a href="{% url 'productos' %}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-2"></i>
-            Volver a Productos
-        </a>
-    </div>
-
-    <!-- Alert Container -->
-    <div class="alert-container mb-3">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="lilis-alert lilis-alert-{{ message.tags|default:'info' }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-    </div>
-
-    <!-- Form Container -->
-    <div class="row justify-content-center">
-        <div class="col-lg-8 col-xl-6">
-            <div class="form-section">
-                <div class="form-header p-4">
-                    <h4 class="mb-0 d-flex align-items-center">
-                        <i class="bi bi-box-seam me-2"></i>
-                        Información del Producto
-                    </h4>
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Formulario de Producto (Lado Izquierdo) -->
+        <div class="col-md-6">
+            <div class="form-container">
+                <div class="form-header">
+                    <h5 class="mb-0 d-flex align-items-center">
+                        <i class="bi bi-box-seam me-3" style="font-size: 1.5rem;"></i>
+                        <span>Formulario de Producto</span>
+                    </h5>
                 </div>
                 
                 <div class="p-4">
-                    <form method="post" class="needs-validation" novalidate>
+                    <!-- Alert Container -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Pasos del formulario -->
+                    <div class="form-steps">
+                        <div class="step active" id="step1" data-action="showStep" data-step="1">
+                            <i class="bi bi-1-circle-fill d-block mb-2" style="font-size: 1.5rem;"></i>
+                            Información Básica
+                        </div>
+                        <div class="step" id="step2" data-action="showStep" data-step="2">
+                            <i class="bi bi-2-circle-fill d-block mb-2" style="font-size: 1.5rem;"></i>
+                            Precios y Stock
+                        </div>
+                        <div class="step" id="step3" data-action="showStep" data-step="3">
+                            <i class="bi bi-3-circle-fill d-block mb-2" style="font-size: 1.5rem;"></i>
+                            Detalles Adicionales
+                        </div>
+                    </div>
+
+                    <form method="post" id="productForm">
                         {% csrf_token %}
                         
-                        <!-- Nombre del Producto -->
-                        <div class="mb-4">
-                            <label for="{{ form.nombre.id_for_label }}" class="lilis-form-label required-field">
-                                Nombre del Producto
-                            </label>
-                            {{ form.nombre }}
-                            {% if form.nombre.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.nombre.errors.0 }}
-                                </div>
-                            {% endif %}
-                            <div class="field-help">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Ingresa un nombre descriptivo y único para el producto
-                            </div>
-                        </div>
-
-                        <!-- Descripción -->
-                        <div class="mb-4">
-                            <label for="{{ form.descripcion.id_for_label }}" class="lilis-form-label">
-                                Descripción
-                            </label>
-                            {{ form.descripcion }}
-                            {% if form.descripcion.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.descripcion.errors.0 }}
-                                </div>
-                            {% endif %}
-                            <div class="field-help">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Descripción detallada del producto (opcional)
-                            </div>
-                        </div>
-
-                        <!-- Precio -->
-                        <div class="mb-4">
-                            <label for="{{ form.precio.id_for_label }}" class="lilis-form-label required-field">
-                                Precio de Venta
-                            </label>
-                            <div class="price-input">
-                                {{ form.precio }}
-                            </div>
-                            {% if form.precio.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.precio.errors.0 }}
-                                </div>
-                            {% endif %}
-                            <div class="field-help">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Precio en soles (S/). Ejemplo: 15.50
-                            </div>
-                        </div>
-
-                        <!-- Categoría -->
-                        {% if form.categoria %}
-                        <div class="mb-4">
-                            <label for="{{ form.categoria.id_for_label }}" class="lilis-form-label required-field">
-                                Categoría
-                            </label>
-                            {{ form.categoria }}
-                            {% if form.categoria.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.categoria.errors.0 }}
-                                </div>
-                            {% endif %}
-                            <div class="field-help">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Selecciona la categoría que mejor describe el producto
-                            </div>
-                        </div>
-                        {% endif %}
-
-                        <!-- Estado/Activo -->
-                        {% if form.activo %}
-                        <div class="mb-4">
-                            <div class="form-check form-switch">
-                                {{ form.activo }}
-                                <label class="form-check-label" for="{{ form.activo.id_for_label }}">
-                                    Producto Activo
+                        <!-- Paso 1: Información Básica -->
+                        <div class="step-content active" id="content-step1">
+                            <h6 class="section-title">
+                                <i class="bi bi-info-circle me-2"></i>Identificación del Producto
+                            </h6>
+                            
+                            <div class="form-field">
+                                <label class="form-label">
+                                    <i class="bi bi-tag me-1"></i>Nombre del Producto 
+                                    <span class="text-danger">*</span>
                                 </label>
+                                {{ form.nombre }}
+                                {% if form.nombre.errors %}
+                                    <div class="text-danger small mt-1">{{ form.nombre.errors.0 }}</div>
+                                {% endif %}
                             </div>
-                            {% if form.activo.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.activo.errors.0 }}
+
+                            <div class="form-field">
+                                <label class="form-label">
+                                    <i class="bi bi-file-text me-1"></i>Descripción
+                                </label>
+                                {{ form.descripcion }}
+                                {% if form.descripcion.errors %}
+                                    <div class="text-danger small mt-1">{{ form.descripcion.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-field">
+                                        <label class="form-label">
+                                            <i class="bi bi-upc me-1"></i>SKU <span class="text-muted">(opcional)</span>
+                                        </label>
+                                        <input type="text" class="form-input" name="sku" placeholder="SKU-001">
+                                    </div>
                                 </div>
-                            {% endif %}
-                            <div class="field-help">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Los productos inactivos no aparecerán en las ventas
+                                <div class="col-md-6">
+                                    <div class="form-field">
+                                        <label class="form-label">
+                                            <i class="bi bi-grid me-1"></i>Categoría
+                                        </label>
+                                        <select class="form-select" name="categoria">
+                                            <option value="">Seleccione...</option>
+                                            <option value="Dulces">🍬 Dulces</option>
+                                            <option value="Chocolates">🍫 Chocolates</option>
+                                            <option value="Bebidas">🥤 Bebidas</option>
+                                            <option value="Snacks">🍿 Snacks</option>
+                                            <option value="Galletas">🍪 Galletas</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-field">
+                                        <label class="form-label">
+                                            <i class="bi bi-building me-1"></i>Marca <span class="text-muted">(opcional)</span>
+                                        </label>
+                                        <input type="text" class="form-input" name="marca" placeholder="Marca del producto">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-field">
+                                        <label class="form-label">
+                                            <i class="bi bi-box me-1"></i>Modelo <span class="text-muted">(opcional)</span>
+                                        </label>
+                                        <input type="text" class="form-input" name="modelo" placeholder="Modelo">
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
+                        <!-- Paso 2: Precios y Stock -->
+                        <div class="step-content" id="content-step2">
+                            <h6 class="section-title">
+                                <i class="bi bi-cash-stack me-2"></i>Precios y Control de Stock
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-field">
+                                        <label class="form-label">
+                                            <i class="bi bi-currency-dollar me-1"></i>Precio de Venta 
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.precio_referencia }}
+                                        {% if form.precio_referencia.errors %}
+                                            <div class="text-danger small mt-1">{{ form.precio_referencia.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-field">
+                                        <label class="form-label">
+                                            <i class="bi bi-receipt me-1"></i>Costo Unitario <span class="text-muted">(opcional)</span>
+                                        </label>
+                                        <input type="number" class="form-input" name="costo_unitario" placeholder="0.00" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-field">
+                                        <label class="form-label">
+                                            <i class="bi bi-dash-circle me-1"></i>Stock Mínimo
+                                        </label>
+                                        <input type="number" class="form-input" name="stock_minimo" placeholder="0" value="0">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-field">
+                                        <label class="form-label">
+                                            <i class="bi bi-plus-circle me-1"></i>Stock Máximo
+                                        </label>
+                                        <input type="number" class="form-input" name="stock_maximo" placeholder="0">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-field">
+                                        <label class="form-label">
+                                            <i class="bi bi-arrow-repeat me-1"></i>Punto Reorden
+                                        </label>
+                                        <input type="number" class="form-input" name="punto_reorden" placeholder="0">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-field">
+                                        <label class="form-label">
+                                            <i class="bi bi-box2 me-1"></i>Unidad de Compra
+                                        </label>
+                                        <select class="form-select" name="unidad_compra">
+                                            <option value="">Seleccione...</option>
+                                            <option value="Unidad">Unidad</option>
+                                            <option value="Caja">Caja</option>
+                                            <option value="Paquete">Paquete</option>
+                                            <option value="Docena">Docena</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-field">
+                                        <label class="form-label">
+                                            <i class="bi bi-calculator me-1"></i>Factor de Conversión
+                                        </label>
+                                        <input type="number" class="form-input" name="factor_conversion" placeholder="1" value="1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Paso 3: Detalles Adicionales -->
+                        <div class="step-content" id="content-step3">
+                            <h6 class="section-title">
+                                <i class="bi bi-sliders me-2"></i>Configuración Avanzada
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-field">
+                                        <label class="form-label">
+                                            <i class="bi bi-image me-1"></i>URL de Imagen <span class="text-muted">(opcional)</span>
+                                        </label>
+                                        <input type="url" class="form-input" name="imagen_url" placeholder="https://...imagen.jpg">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-field">
+                                        <label class="form-label">
+                                            <i class="bi bi-file-pdf me-1"></i>Ficha Técnica <span class="text-muted">(opcional)</span>
+                                        </label>
+                                        <input type="url" class="form-input" name="ficha_tecnica_url" placeholder="https://...ficha.pdf">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-field">
+                                <label class="form-label mb-3">
+                                    <i class="bi bi-gear me-1"></i>Opciones de Control
+                                </label>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" name="perecedero" id="perecedero">
+                                            <label class="form-check-label" for="perecedero">
+                                                <i class="bi bi-clock-history me-1"></i>Perecedero
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" name="control_por_lote" id="control_por_lote">
+                                            <label class="form-check-label" for="control_por_lote">
+                                                <i class="bi bi-boxes me-1"></i>Control por Lote
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" name="control_por_serie" id="control_por_serie">
+                                            <label class="form-check-label" for="control_por_serie">
+                                                <i class="bi bi-hash me-1"></i>Control por Serie
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-field mt-4">
+                                <label class="form-label">
+                                    <i class="bi bi-toggle-on me-1"></i>Estado del Producto
+                                </label>
+                                <div class="form-check form-switch" style="font-size: 1.1rem;">
+                                    {{ form.activo }}
+                                    <label class="form-check-label ms-2" for="{{ form.activo.id_for_label }}">
+                                        <strong>Producto Activo</strong>
+                                        <small class="d-block text-muted">Los productos inactivos no aparecerán en ventas</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Error general del formulario -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
                         {% endif %}
 
-                        <!-- Botones de Acción -->
-                        <div class="d-flex gap-3 pt-3 border-top">
-                            <button type="submit" class="btn btn-lilis-primary flex-fill">
-                                <i class="bi bi-{% if form.instance.pk %}check-circle{% else %}plus-circle{% endif %} me-2"></i>
-                                {% if form.instance.pk %}Actualizar Producto{% else %}Crear Producto{% endif %}
+                        <div class="d-flex gap-3 mt-4">
+                            <button type="submit" class="btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Guardar Producto
                             </button>
-                            <a href="{% url 'productos' %}" class="btn btn-outline-secondary">
-                                <i class="bi bi-x-circle me-2"></i>
-                                Cancelar
-                            </a>
+                            <button type="button" class="btn-secondary" data-action="clearForm">
+                                <i class="bi bi-x-circle me-2"></i>Limpiar Formulario
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
 
-        <!-- Preview Card (si es edición) -->
-        {% if form.instance.pk %}
-        <div class="col-lg-4">
-            <div class="lilis-card sticky-top" style="top: 2rem;">
-                <div class="lilis-card-header">
-                    <h6 class="lilis-card-title mb-0">
-                        <i class="bi bi-eye me-2"></i>
-                        Vista Previa
-                    </h6>
+        <!-- Lista de Productos (Lado Derecho) -->
+        <div class="col-md-6">
+            <div class="products-list-container">
+                <div class="products-list-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 d-flex align-items-center">
+                        <i class="bi bi-list-check me-3" style="font-size: 1.5rem;"></i>
+                        <span>Productos Registrados</span>
+                    </h5>
+                    <button class="export-btn">
+                        <i class="bi bi-file-earmark-excel me-2"></i>
+                        Exportar
+                    </button>
                 </div>
-                <div class="lilis-card-body">
-                    <div class="text-center">
-                        <div class="bg-lilis-green-light rounded-3 p-4 mb-3">
-                            <i class="bi bi-box-seam display-4 text-lilis-green"></i>
-                        </div>
-                        <h5 class="fw-bold text-dark">{{ form.instance.nombre|default:"Nombre del Producto" }}</h5>
-                        <p class="text-muted small">{{ form.instance.descripcion|default:"Descripción del producto..." }}</p>
-                        <div class="badge bg-success fs-6 px-3 py-2">
-                            S/ {{ form.instance.precio|default:"0.00" }}
-                        </div>
-                    </div>
-                    
-                    <hr class="my-3">
-                    
-                    <div class="row text-center">
-                        <div class="col-6">
-                            <div class="text-muted small">Estado</div>
-                            <div class="fw-bold text-{% if form.instance.activo %}success{% else %}danger{% endif %}">
-                                {% if form.instance.activo %}Activo{% else %}Inactivo{% endif %}
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="text-muted small">ID</div>
-                            <div class="fw-bold">#{{ form.instance.pk|default:"---" }}</div>
-                        </div>
-                    </div>
+                
+                <div class="search-container">
+                    <i class="bi bi-search" style="color: #6b7280;"></i>
+                    <input type="text" class="search-input" placeholder="Buscar por SKU o nombre...">
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th><i class="bi bi-upc me-1"></i>SKU</th>
+                                <th><i class="bi bi-tag me-1"></i>Nombre</th>
+                                <th class="text-center"><i class="bi bi-box me-1"></i>Stock</th>
+                                <th class="text-center"><i class="bi bi-gear me-1"></i>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsList" class="products-list-body">
+                            {% for producto in productos %}
+                            <tr data-product-id="{{ producto.id_producto }}" class="product-item">
+                                <td class="small fw-bold">SKU-{{ producto.id_producto|stringformat:"03d" }}</td>
+                                <td class="small product-name">{{ producto.nombre }}</td>
+                                <td class="text-center">
+                                    <span class="product-stock">0</span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-actions justify-content-center">
+                                        <button class="btn-action btn-edit" 
+                                                data-action="editProduct"
+                                                data-product-id="{{ producto.id_producto }}">
+                                            <i class="bi bi-pencil me-1"></i>Editar
+                                        </button>
+                                        <button class="btn-action btn-delete"
+                                                data-action="deleteProduct" 
+                                                data-product-id="{{ producto.id_producto }}">
+                                            <i class="bi bi-trash me-1"></i>Eliminar
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-5">
+                                    <i class="bi bi-inbox d-block mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
+                                    <h6>No hay productos registrados</h6>
+                                    <p class="small">Comienza agregando tu primer producto</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}
@@ -257,68 +700,176 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Form validation
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
+        let currentStep = 1;
+        const totalSteps = 3;
+
+        // Función para mostrar paso específico
+        function showStep(step) {
+            // Actualizar contenido de pasos
+            document.querySelectorAll('.step-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            const targetStep = document.getElementById('content-step' + step);
+            if (targetStep) {
+                targetStep.classList.add('active');
+            }
+
+            // Actualizar indicadores de paso
+            document.querySelectorAll('.step').forEach((stepEl, index) => {
+                stepEl.classList.remove('active', 'completed');
+                if (index + 1 < step) {
+                    stepEl.classList.add('completed');
+                } else if (index + 1 === step) {
+                    stepEl.classList.add('active');
                 }
-                form.classList.add('was-validated');
-            }, false);
+            });
+
+            currentStep = step;
+        }
+
+        // Event listeners para los pasos
+        document.querySelectorAll('[data-action="showStep"]').forEach(step => {
+            step.addEventListener('click', function() {
+                const stepNumber = parseInt(this.dataset.step);
+                showStep(stepNumber);
+            });
         });
 
-        // Price formatting
-        const priceInput = document.querySelector('input[name=precio]');
-        if (priceInput) {
-            priceInput.addEventListener('input', function(e) {
-                let value = e.target.value.replace(/[^0-9.]/g, '');
-                const parts = value.split('.');
-                if (parts.length > 2) {
-                    value = parts[0] + '.' + parts.slice(1).join('');
+        // Limpiar formulario
+        const clearBtn = document.querySelector('[data-action="clearForm"]');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function() {
+                if (confirm('¿Estás seguro de limpiar el formulario?')) {
+                    document.getElementById('productForm').reset();
+                    showStep(1);
                 }
-                if (parts[1] && parts[1].length > 2) {
-                    value = parts[0] + '.' + parts[1].substring(0, 2);
-                }
-                e.target.value = value;
             });
         }
 
-        // Auto-focus first field
-        const firstInput = document.querySelector('input[name=nombre]');
-        if (firstInput) {
-            firstInput.focus();
+        // Búsqueda de productos
+        const searchInput = document.querySelector('.search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                document.querySelectorAll('.product-item').forEach(item => {
+                    const name = item.querySelector('.product-name');
+                    const sku = item.querySelector('.fw-bold');
+                    if (name && sku) {
+                        const nameText = name.textContent.toLowerCase();
+                        const skuText = sku.textContent.toLowerCase();
+                        if (nameText.includes(searchTerm) || skuText.includes(searchTerm)) {
+                            item.style.display = '';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    }
+                });
+            });
         }
 
-        // Preview updates (si es edición)
-        {% if form.instance.pk %}
-        const nameInput = document.querySelector('input[name=nombre]');
-        const descInput = document.querySelector('textarea[name=descripcion]');
-        const pricePreview = document.querySelector('input[name=precio]');
-        
-        function updatePreview() {
-            const previewName = document.querySelector('.lilis-card h5');
-            const previewDesc = document.querySelector('.lilis-card p');
-            const previewPrice = document.querySelector('.badge.bg-success');
-            
-            if (nameInput && previewName) {
-                previewName.textContent = nameInput.value || 'Nombre del Producto';
-            }
-            if (descInput && previewDesc) {
-                previewDesc.textContent = descInput.value || 'Descripción del producto...';
-            }
-            if (pricePreview && previewPrice) {
-                previewPrice.textContent = 'S/ ' + (pricePreview.value || '0.00');
-            }
-        }
-        
-        if (nameInput) nameInput.addEventListener('input', updatePreview);
-        if (descInput) descInput.addEventListener('input', updatePreview);
-        if (pricePreview) pricePreview.addEventListener('input', updatePreview);
-        {% endif %}
+        // Editar producto
+        document.querySelectorAll('[data-action="editProduct"]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const productId = this.dataset.productId;
+                window.location.href = `/productos/editar/${productId}/`;
+            });
+        });
 
-        console.log('Product form loaded successfully');
+        // Eliminar producto
+        document.querySelectorAll('[data-action="deleteProduct"]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const productId = this.dataset.productId;
+                const productRow = this.closest('tr');
+                const productNameEl = productRow ? productRow.querySelector('.product-name') : null;
+                const productName = productNameEl ? productNameEl.textContent : 'este producto';
+                
+                if (confirm(`¿Estás seguro de eliminar "${productName}"?`)) {
+                    fetch(`/productos/eliminar/${productId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            if (productRow) productRow.remove();
+                            // Mostrar alerta de éxito
+                            const alertContainer = document.querySelector('.container-fluid');
+                            if (alertContainer) {
+                                const alert = document.createElement('div');
+                                alert.className = 'alert alert-success alert-dismissible fade show';
+                                alert.innerHTML = `
+                                    <i class="bi bi-check-circle-fill me-2"></i>
+                                    Producto eliminado exitosamente
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                `;
+                                alertContainer.insertBefore(alert, alertContainer.firstChild);
+                                setTimeout(() => alert.remove(), 3000);
+                            }
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                }
+            });
+        });
+
+        // Exportar productos
+        const exportBtn = document.querySelector('.export-btn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', function() {
+                alert('Funcionalidad de exportación en desarrollo...');
+            });
+        }
+
+        // Validación de formulario
+        const form = document.getElementById('productForm');
+        if (form) {
+            form.addEventListener('submit', function(event) {
+                const nombre = document.querySelector('[name="nombre"]');
+                const precio = document.querySelector('[name="precio_referencia"]');
+                
+                if (!nombre || !nombre.value.trim()) {
+                    event.preventDefault();
+                    alert('Por favor ingresa el nombre del producto');
+                    showStep(1);
+                    if (nombre) nombre.focus();
+                    return false;
+                }
+                
+                if (!precio || !precio.value || parseFloat(precio.value) <= 0) {
+                    event.preventDefault();
+                    alert('Por favor ingresa un precio válido');
+                    showStep(2);
+                    if (precio) precio.focus();
+                    return false;
+                }
+            });
+        }
+
+        // Auto-cerrar alertas
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                const closeBtn = alert.querySelector('.btn-close');
+                if (closeBtn) {
+                    closeBtn.click();
+                }
+            });
+        }, 5000);
+
+        // Animación de entrada para las filas de productos
+        const productItems = document.querySelectorAll('.product-item');
+        productItems.forEach((item, index) => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                item.style.transition = 'all 0.3s ease';
+                item.style.opacity = '1';
+                item.style.transform = 'translateY(0)';
+            }, index * 50);
+        });
+
+        console.log('Product form loaded successfully - 3 step wizard ready');
     });
 </script>
 {% endblock %}
