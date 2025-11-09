@@ -18,10 +18,12 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from dashboard import views as dashboard_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('dashboard.urls')),
+    path('', dashboard_views.login_view, name='root_login'),
+    path('dashboard/', include('dashboard.urls')),
     path('usuarios/', include('usuarios.urls')),
     path('productos/', include('productos.urls')),
     path('proveedores/', include('proveedores.urls')),

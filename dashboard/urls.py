@@ -5,16 +5,23 @@ from . import views
 app_name = 'dashboard'
 
 urlpatterns = [
-    path('', views.login_view, name='login'),
-    path('dashboard/', login_required(views.home), name='home'),
     path('login/', views.login_view, name='login'),
+    path('', login_required(views.home), name='home'),
     path('logout/', views.logout_view, name='logout'),
     path('forgot-password/', views.forgot_password_view, name='forgot_password'),
     path('reset-password/', views.reset_password_view, name='reset_password'),
-    # path('usuarios/', login_required(views.usuarios_view), name='usuarios'),  # Comentado - usar usuarios.urls
+    path('usuarios/', login_required(views.usuarios_view), name='usuarios'),
+    path('usuarios/obtener/<int:usuario_id>/', login_required(views.obtener_usuario), name='obtener_usuario'),
+    path('usuarios/guardar/', login_required(views.guardar_usuario), name='guardar_usuario'),
+    path('usuarios/eliminar/<int:usuario_id>/', login_required(views.eliminar_usuario), name='eliminar_usuario'),
+    path('usuarios/cambiar-estado/<int:usuario_id>/', login_required(views.cambiar_estado_usuario), name='cambiar_estado_usuario'),
+    path('usuarios/exportar-excel/', login_required(views.exportar_usuarios_excel), name='exportar_usuarios_excel'),
     path('productos/', login_required(views.productos_view), name='productos'),
+    path('productos/obtener/<int:producto_id>/', login_required(views.obtener_producto), name='obtener_producto'),
+    path('productos/actualizar/', login_required(views.actualizar_producto), name='actualizar_producto'),
     path('productos/agregar/', login_required(views.agregar_producto), name='agregar_producto'),
     path('productos/editar/<int:producto_id>/', login_required(views.editar_producto), name='editar_producto'),
+    path('productos/exportar-excel/', login_required(views.exportar_productos_excel), name='exportar_productos_excel'),
     path('inventarios/', login_required(views.inventarios_view), name='inventarios'),
     path('inventarios/agregar/', login_required(views.agregar_inventario), name='agregar_inventario'),
     path('inventarios/editar/<int:inventario_id>/', login_required(views.editar_inventario), name='editar_inventario'),

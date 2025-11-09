@@ -275,10 +275,11 @@
                         </td>
                         <td>
                             <div class="product-actions d-flex justify-content-center gap-1">
-                                <a href="{% url 'productos:editar_producto' producto.id_producto %}" 
+                                <a href="{% url 'dashboard:editar_producto' producto.id_producto %}" 
                                    class="btn btn-sm" 
                                    style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;"
-                                   title="Editar">
+                                   title="Editar"
+                                   onclick="event.preventDefault(); editProduct('{{ producto.id_producto }}');">
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 <button class="btn btn-sm btn-outline-info" 
@@ -387,6 +388,58 @@
         </div>
     </div>
 </div>
+
+<!-- Modal para Editar Producto -->
+<div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #dc2626, #b91c1c); color: white;">
+                <h5 class="modal-title" id="editProductModalLabel">
+                    <i class="bi bi-pencil-square me-2"></i>Editar Producto
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editProductForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="editProductId" name="product_id">
+                    
+                    <div class="mb-3">
+                        <label for="editNombre" class="form-label">
+                            <i class="bi bi-tag me-1"></i>Nombre del Producto 
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="editNombre" name="nombre" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editDescripcion" class="form-label">
+                            <i class="bi bi-file-text me-1"></i>Descripción
+                        </label>
+                        <textarea class="form-control" id="editDescripcion" name="descripcion" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editPrecio" class="form-label">
+                            <i class="bi bi-currency-dollar me-1"></i>Precio de Referencia 
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input type="number" class="form-control" id="editPrecio" name="precio_referencia" step="1" min="0" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveProductChanges()" style="background: linear-gradient(135deg, #dc2626, #b91c1c); border: none;">
+                    <i class="bi bi-check-circle me-1"></i>Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -446,11 +499,260 @@
     
     // Ver detalles del producto
     function viewProduct(productId) {
+        // Mostrar loading
         Swal.fire({
-            icon: 'info',
-            title: 'Próximamente',
-            text: 'Vista de detalles del producto #' + productId + ' en desarrollo',
-            confirmButtonColor: '#dc2626'
+            title: 'Cargando detalles...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // Obtener datos del producto
+        const url = `/dashboard/productos/obtener/${productId}/`;
+        
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            Swal.close();
+            
+            if (data.success) {
+                const producto = data.producto;
+                
+                // Construir HTML de proveedores
+                let proveedoresHtml = '';
+                if (producto.proveedores && producto.proveedores.length > 0) {
+                    proveedoresHtml = '<div class="mt-3"><h6 class="text-primary mb-2">Proveedores Asociados:</h6><div class="list-group">';
+                    producto.proveedores.forEach(prov => {
+                        proveedoresHtml += `
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">${prov.nombre}</h6>
+                                    <small class="text-success fw-bold">$${parseInt(prov.precio_acordado).toLocaleString()}</small>
+                                </div>
+                                ${prov.contacto ? `<p class="mb-1 text-muted small"><i class="bi bi-person me-1"></i>${prov.contacto}</p>` : ''}
+                                ${prov.fecha_registro ? `<small class="text-muted"><i class="bi bi-calendar me-1"></i>Desde: ${prov.fecha_registro}</small>` : ''}
+                            </div>
+                        `;
+                    });
+                    proveedoresHtml += '</div></div>';
+                } else {
+                    proveedoresHtml = '<div class="alert alert-info mt-3 mb-0"><i class="bi bi-info-circle me-2"></i>No hay proveedores asociados a este producto</div>';
+                }
+                
+                // Mostrar detalles en modal
+                Swal.fire({
+                    title: `<i class="bi bi-box-seam me-2"></i>${producto.nombre}`,
+                    html: `
+                        <div class="text-start">
+                            <div class="mb-3">
+                                <label class="text-muted small">ID del Producto</label>
+                                <p class="mb-0 fw-bold">#${producto.id}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">Descripción</label>
+                                <p class="mb-0">${producto.descripcion}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">Precio de Referencia</label>
+                                <p class="mb-0 fs-5 text-primary fw-bold">$${parseInt(producto.precio_referencia).toLocaleString()}</p>
+                            </div>
+                            ${proveedoresHtml}
+                        </div>
+                    `,
+                    width: '600px',
+                    confirmButtonColor: '#dc2626',
+                    confirmButtonText: 'Cerrar'
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'No se pudieron cargar los detalles del producto',
+                    confirmButtonColor: '#dc2626'
+                });
+            }
+        })
+        .catch(error => {
+            Swal.close();
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Ocurrió un error al cargar los detalles: ' + error.message,
+                confirmButtonColor: '#dc2626'
+            });
+        });
+    }
+    
+    // Editar producto
+    function editProduct(productId) {
+        // Mostrar loading
+        Swal.fire({
+            title: 'Cargando datos...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // Obtener datos del producto
+        const url = `/dashboard/productos/obtener/${productId}/`;
+        
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            Swal.close();
+            
+            if (data.success) {
+                const producto = data.producto;
+                
+                // Llenar el formulario del modal
+                document.getElementById('editProductId').value = producto.id;
+                document.getElementById('editNombre').value = producto.nombre;
+                document.getElementById('editDescripcion').value = producto.descripcion;
+                document.getElementById('editPrecio').value = producto.precio_referencia;
+                
+                // Mostrar el modal
+                const modal = new bootstrap.Modal(document.getElementById('editProductModal'));
+                modal.show();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'No se pudieron cargar los datos del producto',
+                    confirmButtonColor: '#dc2626'
+                });
+            }
+        })
+        .catch(error => {
+            Swal.close();
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Ocurrió un error al cargar los datos: ' + error.message,
+                confirmButtonColor: '#dc2626'
+            });
+        });
+    }
+    
+    // Guardar cambios del producto
+    function saveProductChanges() {
+        const productId = document.getElementById('editProductId').value;
+        const nombre = document.getElementById('editNombre').value.trim();
+        const descripcion = document.getElementById('editDescripcion').value.trim();
+        const precio = document.getElementById('editPrecio').value;
+        
+        // Validaciones
+        if (!nombre) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Campo requerido',
+                text: 'El nombre del producto es obligatorio',
+                confirmButtonColor: '#dc2626'
+            });
+            return;
+        }
+        
+        if (!precio || parseFloat(precio) <= 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Precio inválido',
+                text: 'El precio debe ser mayor a 0',
+                confirmButtonColor: '#dc2626'
+            });
+            return;
+        }
+        
+        // Mostrar loading
+        Swal.fire({
+            title: 'Guardando cambios...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // Preparar datos
+        const formData = new FormData();
+        formData.append('product_id', productId);
+        formData.append('nombre', nombre);
+        formData.append('descripcion', descripcion);
+        formData.append('precio_referencia', precio);
+        
+        // Enviar petición
+        fetch('/dashboard/productos/actualizar/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            Swal.close();
+            
+            if (data.success) {
+                // Cerrar modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editProductModal'));
+                modal.hide();
+                
+                // Mostrar mensaje de éxito
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Actualizado!',
+                    text: 'El producto se actualizó correctamente',
+                    confirmButtonColor: '#dc2626',
+                    timer: 2000
+                }).then(() => {
+                    window.location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'No se pudo actualizar el producto',
+                    confirmButtonColor: '#dc2626'
+                });
+            }
+        })
+        .catch(error => {
+            Swal.close();
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Ocurrió un error al guardar los cambios: ' + error.message,
+                confirmButtonColor: '#dc2626'
+            });
         });
     }
     
@@ -515,54 +817,31 @@
     
     // Exportar a Excel
     function exportToExcel() {
-        // Recolectar todos los datos de la tabla
-        const table = document.getElementById('productsTable');
-        const rows = table.querySelectorAll('tbody tr');
-        
-        if (rows.length === 0 || (rows.length === 1 && rows[0].cells.length < 5)) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Sin datos',
-                text: 'No hay datos para exportar',
-                confirmButtonColor: '#dc2626'
-            });
-            return;
-        }
-        
-        let csvContent = "ID,Nombre,Descripción,Precio\n";
-        
-        rows.forEach(row => {
-            if (row.cells.length >= 5) {
-                const id = row.cells[0].textContent.trim().replace('#', '');
-                const nombre = row.cells[1].textContent.trim();
-                const descripcion = row.cells[2].textContent.trim();
-                const precio = row.cells[3].textContent.trim().replace('S/ ', '');
-                
-                csvContent += `"${id}","${nombre}","${descripcion}","${precio}"\n`;
+        Swal.fire({
+            title: 'Exportando a Excel...',
+            text: 'Generando archivo de productos...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
             }
         });
         
-        // Crear archivo y descargar
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
+        // Descargar archivo
+        const url = '{% url "dashboard:exportar_productos_excel" %}';
+        window.location.href = url;
         
-        link.setAttribute('href', url);
-        link.setAttribute('download', `productos_${new Date().toISOString().slice(0,10)}.csv`);
-        link.style.visibility = 'hidden';
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        Swal.fire({
-            icon: 'success',
-            title: 'Exportado',
-            text: 'Productos exportados exitosamente',
-            confirmButtonColor: '#dc2626',
-            timer: 2000,
-            timerProgressBar: true
-        });
+        // Cerrar loading después de un momento
+        setTimeout(() => {
+            Swal.close();
+            Swal.fire({
+                icon: 'success',
+                title: '¡Exportado!',
+                text: 'El archivo se está descargando',
+                confirmButtonColor: '#dc2626',
+                timer: 2000
+            });
+        }, 1000);
     }
     
     // Función auxiliar para obtener cookie CSRF

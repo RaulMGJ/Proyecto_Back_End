@@ -102,7 +102,7 @@
                 Lista de Usuarios
             </h5>
             <div class="d-flex align-items-center">
-                <span class="badge bg-secondary me-3" id="userCount">{{ users.count }} usuarios</span>
+                <span class="badge bg-secondary me-3" id="userCount">{{ usuarios.count }} usuarios</span>
                 <button class="btn btn-outline-success btn-sm" onclick="exportToExcel()">
                     <i class="bi bi-file-excel me-1"></i>
                     Exportar a Excel
@@ -117,7 +117,7 @@
                         <th scope="col">Usuario</th>
                         <th scope="col">Email</th>
                         <th scope="col">Nombre</th>
-                        <th scope="col">Apellido</th>
+                        <th scope="col">Correo</th>
                         <th scope="col">Teléfono</th>
                         <th scope="col">Rol</th>
                         <th scope="col">Estado</th>
@@ -126,52 +126,52 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for user in users %}
-                    <tr data-user-id="{{ user.id }}">
+                    {% for usuario in usuarios %}
+                    <tr data-user-id="{{ usuario.id_usuario }}">
                         <td>
                             <div class="d-flex align-items-center">
                                 <div class="avatar-circle me-2" style="width: 32px; height: 32px; background: var(--lilis-blue-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--lilis-blue); font-weight: 600; font-size: 0.8rem;">
-                                    {{ user.nombre.0 }}{{ user.apellido.0 }}
+                                    {{ usuario.nombre.0 }}
                                 </div>
-                                <strong>{{ user.usuario }}</strong>
+                                <strong>{{ usuario.username }}</strong>
                             </div>
                         </td>
-                        <td>{{ user.email }}</td>
-                        <td>{{ user.nombre }}</td>
-                        <td>{{ user.apellido }}</td>
-                        <td>{{ user.telefono|default:'-' }}</td>
+                        <td>{{ usuario.email }}</td>
+                        <td>{{ usuario.nombre }}</td>
+                        <td>{{ usuario.correo }}</td>
+                        <td>{{ usuario.telefono|default:'-' }}</td>
                         <td>
-                            <span class="lilis-badge lilis-badge-info">{{ user.id_rol.nombre }}</span>
+                            <span class="lilis-badge lilis-badge-info">{{ usuario.id_rol.nombre }}</span>
                         </td>
                         <td>
-                            {% if user.activo %}
+                            {% if usuario.is_active %}
                                 <span class="lilis-badge lilis-badge-success">ACTIVO</span>
                             {% else %}
                                 <span class="lilis-badge lilis-badge-danger">INACTIVO</span>
                             {% endif %}
                         </td>
                         <td>
-                            {% if user.last_login %}
-                                <small class="text-muted">{{ user.last_login|date:"d/m/Y H:i" }}</small>
+                            {% if usuario.last_login %}
+                                <small class="text-muted">{{ usuario.last_login|date:"d/m/Y H:i" }}</small>
                             {% else %}
                                 <small class="text-muted">Nunca</small>
                             {% endif %}
                         </td>
                         <td>
                             <div class="user-actions">
-                                <button class="btn btn-outline-primary btn-sm" onclick="editUser('{{ user.id }}')" title="Editar">
+                                <button class="btn btn-outline-primary btn-sm" onclick="editUser('{{ usuario.id_usuario }}')" title="Editar">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                {% if user.activo %}
-                                    <button class="btn btn-outline-warning btn-sm" onclick="toggleUserStatus('{{ user.id }}', false)" title="Desactivar">
+                                {% if usuario.is_active %}
+                                    <button class="btn btn-outline-warning btn-sm" onclick="toggleUserStatus('{{ usuario.id_usuario }}', false)" title="Desactivar">
                                         <i class="bi bi-pause-circle"></i>
                                     </button>
                                 {% else %}
-                                    <button class="btn btn-outline-success btn-sm" onclick="toggleUserStatus('{{ user.id }}', true)" title="Activar">
+                                    <button class="btn btn-outline-success btn-sm" onclick="toggleUserStatus('{{ usuario.id_usuario }}', true)" title="Activar">
                                         <i class="bi bi-play-circle"></i>
                                     </button>
                                 {% endif %}
-                                <button class="btn btn-lilis-danger btn-sm" onclick="deleteUser('{{ user.id }}')" title="Eliminar">
+                                <button class="btn btn-lilis-danger btn-sm" onclick="deleteUser('{{ usuario.id_usuario }}')" title="Eliminar">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </div>
@@ -218,19 +218,19 @@
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <div class="form-floating">
-                                <input type="text" class="form-control" id="usuario" name="usuario" placeholder="Usuario" required>
+                                <input type="text" class="form-control" id="usuario" name="usuario" placeholder="Usuario" required autocomplete="username">
                                 <label for="usuario">Usuario <span class="text-danger">*</span></label>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-floating">
-                                <input type="email" class="form-control" id="email" name="email" placeholder="Email" required>
+                                <input type="email" class="form-control" id="email" name="email" placeholder="Email" required autocomplete="email">
                                 <label for="email">Email <span class="text-danger">*</span></label>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-floating">
-                                <input type="password" class="form-control" id="password" name="password" placeholder="Contraseña">
+                                <input type="password" class="form-control" id="password" name="password" placeholder="Contraseña" autocomplete="new-password">
                                 <label for="password">Contraseña <span class="text-danger" id="passwordRequired">*</span></label>
                                 <div class="form-text">Dejar vacío para mantener la contraseña actual</div>
                             </div>
@@ -240,7 +240,7 @@
                                 <select class="form-select" id="id_rol" name="id_rol" required>
                                     <option value="">Seleccionar rol</option>
                                     {% for rol in roles %}
-                                    <option value="{{ rol.id }}">{{ rol.nombre }}</option>
+                                    <option value="{{ rol.id_rol }}">{{ rol.nombre }}</option>
                                     {% endfor %}
                                 </select>
                                 <label for="id_rol">Rol <span class="text-danger">*</span></label>
@@ -255,28 +255,16 @@
                     </h6>
                     
                     <div class="row g-3 mb-4">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <div class="form-floating">
-                                <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Nombre" required>
-                                <label for="nombre">Nombre <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Nombre" required autocomplete="name">
+                                <label for="nombre">Nombre Completo <span class="text-danger">*</span></label>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <div class="form-floating">
-                                <input type="text" class="form-control" id="apellido" name="apellido" placeholder="Apellido" required>
-                                <label for="apellido">Apellido <span class="text-danger">*</span></label>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-floating">
-                                <input type="tel" class="form-control" id="telefono" name="telefono" placeholder="Teléfono">
+                                <input type="tel" class="form-control" id="telefono" name="telefono" placeholder="Teléfono" autocomplete="tel">
                                 <label for="telefono">Teléfono</label>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-floating">
-                                <input type="text" class="form-control" id="direccion" name="direccion" placeholder="Dirección">
-                                <label for="direccion">Dirección</label>
                             </div>
                         </div>
                     </div>
@@ -326,8 +314,28 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
     let isEditMode = false;
+    
+    // Función para obtener el CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
     
     // Modal Functions
     function openNewUserModal() {
@@ -342,43 +350,218 @@
     }
     
     function editUser(userId) {
+        console.log('Editando usuario:', userId);
         isEditMode = true;
         document.getElementById('userModalLabel').innerHTML = '<i class="bi bi-pencil me-2"></i>Editar Usuario';
         document.getElementById('submitButtonText').textContent = 'Actualizar Usuario';
         document.getElementById('passwordRequired').style.display = 'none';
         document.getElementById('password').required = false;
         
-        // Aquí cargarías los datos del usuario via AJAX
-        // Por ahora simulamos la carga
+        // Cargar los datos del usuario via AJAX
         loadUserData(userId);
         
         new bootstrap.Modal(document.getElementById('userModal')).show();
     }
     
     function loadUserData(userId) {
-        // Simulación de carga de datos - integrar con backend
-        document.getElementById('userId').value = userId;
-        // Llenar los campos del formulario con los datos del usuario
+        console.log('Cargando datos del usuario:', userId);
+        // Mostrar loading
+        Swal.fire({
+            title: 'Cargando datos...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // Obtener datos del usuario
+        const url = `/dashboard/usuarios/obtener/${userId}/`;
+        console.log('URL:', url);
+        
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrftoken
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers.get('content-type'));
+            
+            // Verificar si la respuesta es JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('El servidor no devolvió JSON. Probablemente hay un error de autenticación o permisos.');
+            }
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            return response.json();
+        })
+        .then(data => {
+            console.log('Data recibida:', data);
+            Swal.close();
+            
+            if (data.success) {
+                const usuario = data.usuario;
+                
+                // Llenar los campos del formulario
+                document.getElementById('userId').value = usuario.id;
+                document.getElementById('usuario').value = usuario.usuario;
+                document.getElementById('email').value = usuario.email;
+                document.getElementById('nombre').value = usuario.nombre;
+                document.getElementById('telefono').value = usuario.telefono;
+                document.getElementById('id_rol').value = usuario.id_rol;
+                document.getElementById('activo').checked = usuario.is_active;
+                document.getElementById('cambiar_password').checked = usuario.cambiar_password;
+                
+                // Limpiar campo de contraseña
+                document.getElementById('password').value = '';
+            } else {
+                console.error('Error en respuesta:', data);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'No se pudieron cargar los datos del usuario',
+                    confirmButtonColor: '#dc2626'
+                });
+            }
+        })
+        .catch(error => {
+            Swal.close();
+            console.error('Error en fetch:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Ocurrió un error al cargar los datos: ' + error.message,
+                confirmButtonColor: '#dc2626'
+            });
+        });
     }
     
     // CRUD Operations
     function deleteUser(userId) {
-        if (confirm('¿Estás seguro de que deseas eliminar este usuario?\n\nEsta acción no se puede deshacer.')) {
-            // Implementar eliminación via AJAX
-            console.log('Eliminando usuario:', userId);
-            LilisSystem.showAlert('Usuario eliminado correctamente', 'success');
-        }
+        console.log('Eliminando usuario:', userId);
+        Swal.fire({
+            title: '¿Eliminar usuario?',
+            text: 'Esta acción no se puede deshacer',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Eliminar via AJAX
+                fetch(`/dashboard/usuarios/eliminar/${userId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrftoken
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Usuario eliminado!',
+                            text: data.message,
+                            confirmButtonColor: '#dc2626',
+                            timer: 2000
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message,
+                            confirmButtonColor: '#dc2626'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un error al eliminar el usuario',
+                        confirmButtonColor: '#dc2626'
+                    });
+                });
+            }
+        });
     }
     
     function toggleUserStatus(userId, activate) {
+        console.log('Cambiando estado del usuario:', userId, 'activar:', activate);
         const action = activate ? 'activar' : 'desactivar';
-        if (confirm(`¿Estás seguro de que deseas ${action} este usuario?`)) {
-            // Implementar cambio de estado via AJAX
-            console.log(`${action} usuario:`, userId);
-            LilisSystem.showAlert(`Usuario ${action}do correctamente`, 'success');
-            // Recargar la página o actualizar la fila
-            location.reload();
-        }
+        const actionPast = activate ? 'activado' : 'desactivado';
+        
+        Swal.fire({
+            title: `¿${action.charAt(0).toUpperCase() + action.slice(1)} usuario?`,
+            text: `El usuario será ${actionPast}`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: activate ? '#10b981' : '#f59e0b',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: `Sí, ${action}`,
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Cambiar estado via AJAX
+                const formData = new FormData();
+                formData.append('activo', activate);
+                
+                fetch(`/dashboard/usuarios/cambiar-estado/${userId}/`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrftoken
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: `¡Usuario ${actionPast}!`,
+                            text: data.message,
+                            confirmButtonColor: '#dc2626',
+                            timer: 2000
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message,
+                            confirmButtonColor: '#dc2626'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un error al cambiar el estado',
+                        confirmButtonColor: '#dc2626'
+                    });
+                });
+            }
+        });
     }
     
     // Search and Filter Functions
@@ -421,25 +604,151 @@
     
     // Export function
     function exportToExcel() {
-        // Implementar exportación
-        LilisSystem.showAlert('Exportando datos a Excel...', 'info');
+        Swal.fire({
+            title: 'Exportando a Excel...',
+            text: 'Generando archivo de usuarios...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // Descargar archivo
+        const url = '{% url "dashboard:exportar_usuarios_excel" %}';
+        window.location.href = url;
+        
+        // Cerrar loading después de un momento
+        setTimeout(() => {
+            Swal.close();
+            Swal.fire({
+                icon: 'success',
+                title: '¡Exportado!',
+                text: 'El archivo se está descargando',
+                confirmButtonColor: '#dc2626',
+                timer: 2000
+            });
+        }, 1000);
     }
     
     // Form submission
     document.getElementById('userForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
+        // Validaciones
+        const usuario = document.getElementById('usuario').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const nombre = document.getElementById('nombre').value.trim();
+        const rol = document.getElementById('id_rol').value;
+        
+        // Debug
+        console.log('Validando formulario:', {usuario, email, nombre, rol, password: password ? '***' : ''});
+        
+        // Validar campos requeridos (teléfono no es requerido)
+        if (!usuario || !email || !nombre || !rol) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Campos incompletos',
+                text: 'Por favor completa todos los campos requeridos (Usuario, Email, Nombre y Rol)',
+                confirmButtonColor: '#dc2626'
+            });
+            return;
+        }
+        
+        // Validar email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Email inválido',
+                text: 'Por favor ingresa un email válido',
+                confirmButtonColor: '#dc2626'
+            });
+            return;
+        }
+        
+        // Validar contraseña en modo creación
+        if (!isEditMode && password.length < 8) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Contraseña débil',
+                text: 'La contraseña debe tener al menos 8 caracteres',
+                confirmButtonColor: '#dc2626'
+            });
+            return;
+        }
+        
+        // Validar contraseña si se ingresó en modo edición
+        if (isEditMode && password && password.length < 8) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Contraseña débil',
+                text: 'La contraseña debe tener al menos 8 caracteres',
+                confirmButtonColor: '#dc2626'
+            });
+            return;
+        }
+        
         const formData = new FormData(this);
         const action = isEditMode ? 'actualizado' : 'creado';
+        const url = '{% url "dashboard:guardar_usuario" %}';
         
-        // Aquí enviarías los datos via AJAX
-        console.log('Guardando usuario...');
+        // Mostrar loading
+        Swal.fire({
+            title: isEditMode ? 'Actualizando usuario...' : 'Creando usuario...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
         
-        // Simular éxito
-        setTimeout(() => {
-            bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
-            LilisSystem.showAlert(`Usuario ${action} correctamente`, 'success');
-        }, 500);
+        // Enviar datos via AJAX
+        fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrftoken
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
+                Swal.fire({
+                    icon: 'success',
+                    title: `¡Usuario ${action}!`,
+                    text: `El usuario ha sido ${action} correctamente`,
+                    confirmButtonColor: '#dc2626',
+                    timer: 2000
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                let errorMessage = 'Por favor verifica los datos ingresados';
+                if (data.errors) {
+                    errorMessage = Object.values(data.errors).flat().join('\n');
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error al guardar',
+                    text: errorMessage,
+                    confirmButtonColor: '#dc2626'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Ocurrió un error al procesar la solicitud',
+                confirmButtonColor: '#dc2626'
+            });
+        });
     });
     
     // Event listeners for filters

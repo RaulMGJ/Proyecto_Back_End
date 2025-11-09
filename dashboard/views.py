@@ -3,12 +3,15 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from datetime import datetime
 from django.contrib.auth.hashers import make_password
 from django.conf import settings
 from productos.models import Producto
@@ -471,3 +474,497 @@ def usuarios_view(request):
         'user': request.user,
     }
     return render(request, 'dashboard/usuarios.html', context)
+
+@login_required
+def obtener_usuario(request, usuario_id):
+    """API para obtener datos de un usuario en formato JSON"""
+    import traceback
+    
+    # Verificar autenticación
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'message': 'No autenticado'}, status=401)
+    
+    user = request.user
+    
+    # Solo administradores pueden acceder
+    try:
+        if not (user.is_superuser or (hasattr(user, 'id_rol') and user.id_rol.nombre == 'Administrador')):
+            return JsonResponse({'success': False, 'message': 'No tienes permisos'}, status=403)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error verificando permisos: {str(e)}'}, status=500)
+    
+    try:
+        from usuarios.models import Usuario
+        usuario = Usuario.objects.select_related('id_rol').get(id_usuario=usuario_id)
+        
+        data = {
+            'success': True,
+            'usuario': {
+                'id': usuario.id_usuario,
+                'usuario': usuario.username,
+                'email': usuario.email,
+                'nombre': usuario.nombre,
+                'telefono': usuario.telefono or '',
+                'id_rol': usuario.id_rol.id_rol if usuario.id_rol else '',
+                'is_active': usuario.is_active,
+                'cambiar_password': False  # Por defecto no forzar cambio
+            }
+        }
+        return JsonResponse(data)
+    except Usuario.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Usuario no encontrado'}, status=404)
+    except Exception as e:
+        error_trace = traceback.format_exc()
+        print(f"Error en obtener_usuario: {error_trace}")
+        return JsonResponse({'success': False, 'message': f'Error: {str(e)}'}, status=500)
+
+@login_required
+def guardar_usuario(request):
+    """API para crear o actualizar un usuario"""
+    user = request.user
+    
+    # Solo administradores pueden acceder
+    if not (user.is_superuser or (hasattr(user, 'id_rol') and user.id_rol.nombre == 'Administrador')):
+        return JsonResponse({'success': False, 'message': 'No tienes permisos'}, status=403)
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+    
+    try:
+        from usuarios.models import Usuario
+        from roles.models import Rol
+        
+        usuario_id = request.POST.get('user_id')
+        usuario_username = request.POST.get('usuario')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        nombre = request.POST.get('nombre')
+        telefono = request.POST.get('telefono', '')
+        id_rol = request.POST.get('id_rol')
+        activo = request.POST.get('activo') == 'on'
+        
+        # Validaciones básicas
+        if not all([usuario_username, email, nombre, id_rol]):
+            return JsonResponse({
+                'success': False, 
+                'errors': {'general': ['Todos los campos requeridos deben ser completados']}
+            })
+        
+        # Obtener el rol
+        try:
+            rol = Rol.objects.get(pk=id_rol)
+        except Rol.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'errors': {'id_rol': ['El rol seleccionado no existe']}
+            })
+        
+        # Modo edición o creación
+        if usuario_id:
+            # Editar usuario existente
+            usuario = get_object_or_404(Usuario, id_usuario=usuario_id)
+            
+            # Verificar que el username no esté siendo usado por otro usuario
+            if Usuario.objects.filter(username=usuario_username).exclude(id_usuario=usuario_id).exists():
+                return JsonResponse({
+                    'success': False,
+                    'errors': {'usuario': ['Este nombre de usuario ya está en uso']}
+                })
+            
+            # Actualizar datos
+            usuario.username = usuario_username
+            usuario.email = email
+            usuario.correo = email
+            usuario.nombre = nombre
+            usuario.telefono = telefono
+            usuario.id_rol = rol
+            usuario.is_active = activo
+            
+            # Actualizar contraseña solo si se proporcionó
+            if password:
+                usuario.set_password(password)
+            
+            usuario.save()
+            action = 'actualizado'
+        else:
+            # Crear nuevo usuario
+            # Verificar que el username no exista
+            if Usuario.objects.filter(username=usuario_username).exists():
+                return JsonResponse({
+                    'success': False,
+                    'errors': {'usuario': ['Este nombre de usuario ya está en uso']}
+                })
+            
+            # Validar que se proporcionó contraseña
+            if not password:
+                return JsonResponse({
+                    'success': False,
+                    'errors': {'password': ['La contraseña es requerida para nuevos usuarios']}
+                })
+            
+            # Crear usuario
+            usuario = Usuario(
+                username=usuario_username,
+                email=email,
+                correo=email,
+                nombre=nombre,
+                telefono=telefono,
+                id_rol=rol,
+                is_active=activo
+            )
+            usuario.set_password(password)
+            usuario.save()
+            action = 'creado'
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Usuario {action} correctamente',
+            'usuario': {
+                'id': usuario.id_usuario,
+                'usuario': usuario.username,
+                'nombre': usuario.nombre,
+                'email': usuario.email
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'errors': {'general': [str(e)]}
+        }, status=500)
+
+@login_required
+def eliminar_usuario(request, usuario_id):
+    """API para eliminar un usuario"""
+    user = request.user
+    
+    # Solo administradores pueden acceder
+    if not (user.is_superuser or (hasattr(user, 'id_rol') and user.id_rol.nombre == 'Administrador')):
+        return JsonResponse({'success': False, 'message': 'No tienes permisos'}, status=403)
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+    
+    try:
+        from usuarios.models import Usuario
+        usuario = get_object_or_404(Usuario, id_usuario=usuario_id)
+        
+        # No permitir eliminar el usuario actual
+        if usuario.id_usuario == user.id_usuario:
+            return JsonResponse({
+                'success': False,
+                'message': 'No puedes eliminar tu propia cuenta'
+            })
+        
+        nombre = usuario.nombre
+        usuario.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Usuario "{nombre}" eliminado correctamente'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=500)
+
+@login_required
+def cambiar_estado_usuario(request, usuario_id):
+    """API para activar/desactivar un usuario"""
+    user = request.user
+    
+    # Solo administradores pueden acceder
+    if not (user.is_superuser or (hasattr(user, 'id_rol') and user.id_rol.nombre == 'Administrador')):
+        return JsonResponse({'success': False, 'message': 'No tienes permisos'}, status=403)
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+    
+    try:
+        from usuarios.models import Usuario
+        usuario = get_object_or_404(Usuario, id_usuario=usuario_id)
+        
+        # No permitir desactivar el usuario actual
+        if usuario.id_usuario == user.id_usuario:
+            return JsonResponse({
+                'success': False,
+                'message': 'No puedes cambiar el estado de tu propia cuenta'
+            })
+        
+        # Cambiar estado
+        nuevo_estado = request.POST.get('activo', 'false') == 'true'
+        usuario.is_active = nuevo_estado
+        usuario.save()
+        
+        estado_texto = 'activado' if nuevo_estado else 'desactivado'
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Usuario "{usuario.nombre}" {estado_texto} correctamente',
+            'nuevo_estado': nuevo_estado
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=500)
+
+@login_required
+def exportar_usuarios_excel(request):
+    """Exportar lista de usuarios a Excel"""
+    user = request.user
+    
+    # Solo administradores pueden acceder
+    if not (user.is_superuser or (hasattr(user, 'id_rol') and user.id_rol.nombre == 'Administrador')):
+        return JsonResponse({'success': False, 'message': 'No tienes permisos'}, status=403)
+    
+    try:
+        from usuarios.models import Usuario
+        
+        # Crear libro de Excel
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Usuarios"
+        
+        # Estilos
+        header_fill = PatternFill(start_color="DC2626", end_color="DC2626", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF", size=12)
+        border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+        
+        # Encabezados
+        headers = ['ID', 'Usuario', 'Email', 'Nombre', 'Teléfono', 'Rol', 'Estado', 'Último Acceso', 'Fecha Creación']
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num)
+            cell.value = header
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+            cell.border = border
+        
+        # Obtener usuarios
+        usuarios = Usuario.objects.select_related('id_rol').all().order_by('-date_joined')
+        
+        # Llenar datos
+        for row_num, usuario in enumerate(usuarios, 2):
+            ws.cell(row=row_num, column=1).value = usuario.id_usuario
+            ws.cell(row=row_num, column=2).value = usuario.username
+            ws.cell(row=row_num, column=3).value = usuario.email
+            ws.cell(row=row_num, column=4).value = usuario.nombre
+            ws.cell(row=row_num, column=5).value = usuario.telefono or ''
+            ws.cell(row=row_num, column=6).value = usuario.id_rol.nombre if usuario.id_rol else 'Sin rol'
+            ws.cell(row=row_num, column=7).value = 'Activo' if usuario.is_active else 'Inactivo'
+            ws.cell(row=row_num, column=8).value = usuario.last_login.strftime('%Y-%m-%d %H:%M') if usuario.last_login else 'Nunca'
+            ws.cell(row=row_num, column=9).value = usuario.date_joined.strftime('%Y-%m-%d %H:%M') if usuario.date_joined else ''
+            
+            # Aplicar bordes
+            for col_num in range(1, len(headers) + 1):
+                ws.cell(row=row_num, column=col_num).border = border
+                ws.cell(row=row_num, column=col_num).alignment = Alignment(vertical='center')
+        
+        # Ajustar ancho de columnas
+        column_widths = [8, 20, 30, 25, 15, 20, 12, 20, 20]
+        for col_num, width in enumerate(column_widths, 1):
+            ws.column_dimensions[openpyxl.utils.get_column_letter(col_num)].width = width
+        
+        # Crear respuesta HTTP
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        fecha_actual = datetime.now().strftime('%Y%m%d_%H%M%S')
+        response['Content-Disposition'] = f'attachment; filename=usuarios_{fecha_actual}.xlsx'
+        
+        # Guardar y devolver
+        wb.save(response)
+        return response
+        
+    except Exception as e:
+        import traceback
+        print(f"Error exportando usuarios: {traceback.format_exc()}")
+        return JsonResponse({
+            'success': False,
+            'message': f'Error al exportar: {str(e)}'
+        }, status=500)
+
+@login_required
+def exportar_productos_excel(request):
+    """Exportar lista de productos a Excel"""
+    user = request.user
+    
+    # Solo administradores pueden acceder
+    if not (user.is_superuser or (hasattr(user, 'id_rol') and user.id_rol.nombre == 'Administrador')):
+        return JsonResponse({'success': False, 'message': 'No tienes permisos'}, status=403)
+    
+    try:
+        from productos.models import Producto
+        
+        # Crear libro de Excel
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Productos"
+        
+        # Estilos
+        header_fill = PatternFill(start_color="DC2626", end_color="DC2626", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF", size=12)
+        border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+        
+        # Encabezados
+        headers = ['ID', 'Nombre', 'Descripción', 'Precio Referencia']
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num)
+            cell.value = header
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+            cell.border = border
+        
+        # Obtener productos
+        productos = Producto.objects.all().order_by('nombre')
+        
+        # Llenar datos
+        for row_num, producto in enumerate(productos, 2):
+            ws.cell(row=row_num, column=1).value = producto.id_producto
+            ws.cell(row=row_num, column=2).value = producto.nombre
+            ws.cell(row=row_num, column=3).value = producto.descripcion
+            ws.cell(row=row_num, column=4).value = producto.precio_referencia
+            
+            # Formatear precio como moneda
+            ws.cell(row=row_num, column=4).number_format = '$#,##0'
+            
+            # Aplicar bordes
+            for col_num in range(1, len(headers) + 1):
+                ws.cell(row=row_num, column=col_num).border = border
+                ws.cell(row=row_num, column=col_num).alignment = Alignment(vertical='center')
+        
+        # Ajustar ancho de columnas
+        column_widths = [8, 35, 50, 18]
+        for col_num, width in enumerate(column_widths, 1):
+            ws.column_dimensions[openpyxl.utils.get_column_letter(col_num)].width = width
+        
+        # Crear respuesta HTTP
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        fecha_actual = datetime.now().strftime('%Y%m%d_%H%M%S')
+        response['Content-Disposition'] = f'attachment; filename=productos_{fecha_actual}.xlsx'
+        
+        # Guardar y devolver
+        wb.save(response)
+        return response
+        
+    except Exception as e:
+        import traceback
+        print(f"Error exportando productos: {traceback.format_exc()}")
+        return JsonResponse({
+            'success': False,
+            'message': f'Error al exportar: {str(e)}'
+        }, status=500)
+
+@login_required
+def obtener_producto(request, producto_id):
+    """API para obtener detalles de un producto en formato JSON"""
+    import traceback
+    
+    # Verificar autenticación
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'message': 'No autenticado'}, status=401)
+    
+    try:
+        from productos.models import Producto
+        from producto_proveedor.models import ProductoProveedor
+        
+        producto = Producto.objects.get(id_producto=producto_id)
+        
+        # Obtener proveedores asociados
+        proveedores_asociados = ProductoProveedor.objects.filter(
+            id_producto=producto
+        ).select_related('id_proveedor')
+        
+        proveedores_data = []
+        for pp in proveedores_asociados:
+            proveedores_data.append({
+                'id': pp.id_proveedor.id_proveedor,
+                'nombre': pp.id_proveedor.nombre,
+                'contacto': pp.id_proveedor.contacto if hasattr(pp.id_proveedor, 'contacto') else '',
+                'precio_acordado': pp.precio_acordado,
+                'fecha_registro': pp.fecha_registro.strftime('%Y-%m-%d') if pp.fecha_registro else ''
+            })
+        
+        data = {
+            'success': True,
+            'producto': {
+                'id': producto.id_producto,
+                'nombre': producto.nombre,
+                'descripcion': producto.descripcion,
+                'precio_referencia': producto.precio_referencia,
+                'proveedores': proveedores_data
+            }
+        }
+        return JsonResponse(data)
+    except Producto.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Producto no encontrado'}, status=404)
+    except Exception as e:
+        error_trace = traceback.format_exc()
+        print(f"Error en obtener_producto: {error_trace}")
+        return JsonResponse({'success': False, 'message': f'Error: {str(e)}'}, status=500)
+
+@login_required
+def actualizar_producto(request):
+    """API para actualizar un producto"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+    
+    try:
+        from productos.models import Producto
+        
+        producto_id = request.POST.get('product_id')
+        nombre = request.POST.get('nombre', '').strip()
+        descripcion = request.POST.get('descripcion', '').strip()
+        precio_referencia = request.POST.get('precio_referencia')
+        
+        # Validaciones
+        if not producto_id:
+            return JsonResponse({'success': False, 'message': 'ID de producto no proporcionado'})
+        
+        if not nombre:
+            return JsonResponse({'success': False, 'message': 'El nombre es requerido'})
+        
+        if not precio_referencia or int(precio_referencia) <= 0:
+            return JsonResponse({'success': False, 'message': 'El precio debe ser mayor a 0'})
+        
+        # Actualizar producto
+        producto = Producto.objects.get(id_producto=producto_id)
+        producto.nombre = nombre
+        producto.descripcion = descripcion
+        producto.precio_referencia = int(precio_referencia)
+        producto.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Producto actualizado correctamente',
+            'producto': {
+                'id': producto.id_producto,
+                'nombre': producto.nombre,
+                'descripcion': producto.descripcion,
+                'precio_referencia': producto.precio_referencia
+            }
+        })
+        
+    except Producto.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Producto no encontrado'}, status=404)
+    except Exception as e:
+        import traceback
+        print(f"Error actualizando producto: {traceback.format_exc()}")
+        return JsonResponse({'success': False, 'message': f'Error: {str(e)}'}, status=500)
