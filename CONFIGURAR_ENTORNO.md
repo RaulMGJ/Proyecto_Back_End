@@ -4,7 +4,7 @@
 
 ### 1. **Clonar el repositorio:**
 ```bash
-git clone https://github.com/Ch0kpic/prueba.git
+git clone https://github.com/RaulMGJ/Proyecto_Back_End.git
 cd prueba
 ```
 
