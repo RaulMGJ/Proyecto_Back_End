@@ -1,11 +1,11 @@
-# 🍭 Dulcería - Sistema de Gestión
+# Lili's- Sistema de Gestión
 
-## 📋 Descripción
+## Descripción
 Sistema de gestión completo para una dulcería desarrollado con Django, que incluye gestión de inventarios, productos, usuarios y roles con seguridad por permisos.
 
-## 🎯 Requisitos Cumplidos
+## Requisitos Cumplidos
 
-### ✅ **Todos los Requisitos Implementados:**
+###  **Todos los Requisitos Implementados:**
 
 1. **✅ Conexión BD**: Configurado con .env y migraciones aplicadas sin error
 2. **✅ Usuarios y roles**: 4 usuarios creados con permisos diferenciados
@@ -13,7 +13,7 @@ Sistema de gestión completo para una dulcería desarrollado con Django, que inc
 4. **✅ Admin Pro**: Inline, acción personalizada y validación implementadas
 5. **✅ Seguridad**: Filtrado por rol y middleware de control de acceso
 
-## 🚀 **GUÍA PASO A PASO - CONFIGURACIÓN MANUAL**
+##  **GUÍA PASO A PASO - CONFIGURACIÓN MANUAL**
 
 ### **PASO 1: Preparar el Entorno**
 
@@ -24,7 +24,7 @@ Sistema de gestión completo para una dulcería desarrollado con Django, que inc
 
 2. **Verificar que tienes XAMPP/WAMP/LAMP ejecutándose** con MySQL y phpMyAdmin
 
-> 📦 **Dependencias incluidas:**
+>  **Dependencias incluidas:**
 > - Django 5.2.7 - Framework web principal
 > - python-decouple 3.8 - Gestión de variables de entorno
 > - mysqlclient 2.2.7 - Conector para MySQL
@@ -69,7 +69,7 @@ Sistema de gestión completo para una dulcería desarrollado con Django, que inc
    DB_PORT=3306
    ```
 
-3. **⚠️ IMPORTANTE:** Si tu MySQL tiene contraseña, cambia `DB_PASSWORD=` por `DB_PASSWORD=tu_password`
+3. ** IMPORTANTE:** Si tu MySQL tiene contraseña, cambia `DB_PASSWORD=` por `DB_PASSWORD=tu_password`
 
 ### **PASO 4: Aplicar Migraciones**
 
@@ -97,9 +97,9 @@ python manage.py runserver
    - **Usuario:** `admin`
    - **Contraseña:** `admin123`
 
-## 👥 **Usuarios Disponibles**
+##  **Usuarios Disponibles**
 
-### **🔑 Credenciales de Acceso:**
+### ** Credenciales de Acceso:**
 
 | Rol | Usuario | Contraseña | Permisos |
 |-----|---------|------------|----------|
@@ -108,7 +108,7 @@ python manage.py runserver
 | **Bodeguero** | `bodeguero1` | `bodeguero123` | Gestión productos e inventarios |
 | **Cliente** | `cliente1` | `cliente123` | Bloqueado del admin |
 
-## 🏗️ **Estructura del Proyecto**
+##  **Estructura del Proyecto**
 
 ```
 eva2backend/
@@ -124,9 +124,9 @@ eva2backend/
 └── README.md          # Esta guía
 ```
 
-## 🗄️ **Base de Datos**
+##  **Base de Datos**
 
-### **📊 Tablas Creadas:**
+### ** Tablas Creadas:**
 - `rol` - Roles de usuario (Administrador, Vendedor, Bodeguero, Cliente)
 - `usuario` - Usuarios del sistema con autenticación personalizada
 - `producto` - Catálogo de productos de dulcería
@@ -134,41 +134,41 @@ eva2backend/
 - `django_migrations` - Control de migraciones
 - `auth_*` - Tablas de autenticación de Django
 
-### **📦 Datos Iniciales:**
+### ** Datos Iniciales:**
 - **4 roles** predefinidos
 - **4 usuarios** de ejemplo
 - **5 productos** de dulcería (chocolates, gomitas, caramelos, etc.)
 - **7 registros** de inventario con diferentes ubicaciones
 
-## 🔒 **Seguridad por Roles**
+##  **Seguridad por Roles**
 
-### **🛡️ Middleware de Control:**
+### ** Middleware de Control:**
 - **Clientes**: Acceso completamente bloqueado al admin
 - **Vendedores**: Solo productos e inventarios (lectura, solo stock > 0)
 - **Bodegueros**: Productos e inventarios (lectura/escritura completa)
 - **Administradores**: Acceso completo a todas las funcionalidades
 
-### **🔐 Permisos por Modelo:**
+### ** Permisos por Modelo:**
 - **Productos**: Solo Administrador y Bodeguero pueden editar
 - **Inventarios**: Vendedores ven solo stock > 0, Bodegueros ven todo
 - **Roles**: Solo Administrador puede gestionar
 - **Usuarios**: Solo Administrador puede gestionar
 
-## 🛠️ **Funcionalidades del Admin**
+##  **Funcionalidades del Admin**
 
-### **📋 Admin Básico:**
-- ✅ **list_display** configurado en todos los modelos
-- ✅ **search_fields** implementados para búsqueda rápida
-- ✅ **list_filter** aplicados para filtrado por categorías
-- ✅ **ordering** definido para ordenamiento lógico
-- ✅ **list_select_related** optimizado para consultas eficientes
+### ** Admin Básico:**
+-  **list_display** configurado en todos los modelos
+-  **search_fields** implementados para búsqueda rápida
+-  **list_filter** aplicados para filtrado por categorías
+-  **ordering** definido para ordenamiento lógico
+-  **list_select_related** optimizado para consultas eficientes
 
-### **🚀 Admin Pro:**
-- ✅ **Inline**: InventarioInline en Productos (gestión integrada)
-- ✅ **Acción personalizada**: "Actualizar stock a 100 unidades" en Inventarios
-- ✅ **Validación**: Cantidad no puede ser negativa en Inventarios
+### ** Admin Pro:**
+-  **Inline**: InventarioInline en Productos (gestión integrada)
+-  **Acción personalizada**: "Actualizar stock a 100 unidades" en Inventarios
+-  **Validación**: Cantidad no puede ser negativa en Inventarios
 
-## 🔍 **Consultas Útiles en phpMyAdmin**
+##  **Consultas Útiles en phpMyAdmin**
 
 ### **Ver usuarios con sus roles:**
 ```sql
@@ -194,7 +194,7 @@ JOIN producto p ON i.id_producto_id = p.id_producto
 ORDER BY i.fecha_ultima_actualizacion DESC;
 ```
 
-## 🔧 **Solución de Problemas**
+##  **Solución de Problemas**
 
 ### **Error: "Unknown database 'dulceria_db'"**
 Ejecutar en phpMyAdmin:
@@ -213,20 +213,20 @@ GRANT ALL PRIVILEGES ON dulceria_db.* TO 'root'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-## 📱 **Acceso al Sistema**
+##  **Acceso al Sistema**
 
-### **🌐 URLs Importantes:**
+### ** URLs Importantes:**
 - **phpMyAdmin**: http://localhost/phpmyadmin
 - **Admin Django**: http://127.0.0.1:8000/admin/
 - **Base de datos**: `dulceria_db`
 
-### **👤 Usuarios de Prueba:**
+### ** Usuarios de Prueba:**
 - **admin** / admin123 (Administrador completo)
 - **vendedor1** / vendedor123 (Solo lectura)
 - **bodeguero1** / bodeguero123 (Gestión inventarios)
 - **cliente1** / cliente123 (Bloqueado)
 
-## 🎯 **Próximos Pasos**
+##  **Próximos Pasos**
 
 1. **✅ Explorar phpMyAdmin** y familiarizarse con las tablas
 2. **✅ Probar diferentes usuarios** en el admin de Django
@@ -234,7 +234,7 @@ FLUSH PRIVILEGES;
 4. **✅ Crear datos adicionales** si es necesario
 5. **✅ Configurar respaldos** automáticos
 
-## 📝 **Notas Técnicas**
+##  **Notas Técnicas**
 
 - Modelo de usuario personalizado con campo `correo` como USERNAME_FIELD
 - Validaciones en modelo Inventario (cantidad >= 0)
