@@ -370,26 +370,50 @@ def forgot_password_view(request):
             plain_message = strip_tags(html_message)
             
             # Enviar email
-            send_mail(
-                subject='Recuperación de Contraseña - Dulcería Lilis',
-                message=plain_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[email],
-                html_message=html_message,
-                fail_silently=False,
-            )
-            
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Se ha enviado un email con las instrucciones para recuperar tu contraseña'
-                })
-            
-            messages.success(request, 'Se ha enviado un email con las instrucciones para recuperar tu contraseña')
-            return redirect('dashboard:login')
+            try:
+                send_mail(
+                    subject='Recuperación de Contraseña - Dulcería Lilis',
+                    message=plain_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                    html_message=html_message,
+                    fail_silently=False,
+                )
+                
+                # Log exitoso (opcional)
+                print(f"✅ Email de recuperación enviado a: {email}")
+                
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Se ha enviado un email con las instrucciones para recuperar tu contraseña'
+                    })
+                
+                messages.success(request, 'Se ha enviado un email con las instrucciones para recuperar tu contraseña')
+                return redirect('dashboard:login')
+                
+            except Exception as email_error:
+                # Log del error
+                import traceback
+                print(f"❌ Error enviando email a {email}:")
+                print(traceback.format_exc())
+                
+                # Marcar el token como inválido si el email falló
+                token.delete()
+                
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Error al enviar el email. Verifica la configuración del servidor de correo.'
+                    })
+                
+                messages.error(request, 'Error al enviar el email. Por favor contacta al administrador del sistema.')
+                return render(request, 'dashboard/forgot_password.html')
             
         except Usuario.DoesNotExist:
             # Por seguridad, no revelamos que el email no existe
+            print(f"⚠️ Intento de recuperación para email no registrado: {email}")
+            
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
                     'success': True,
@@ -400,13 +424,17 @@ def forgot_password_view(request):
             return redirect('dashboard:login')
             
         except Exception as e:
+            import traceback
+            print(f"❌ Error general en forgot_password_view:")
+            print(traceback.format_exc())
+            
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
                     'success': False,
-                    'message': 'Error al enviar el email. Por favor intenta nuevamente.'
+                    'message': 'Error al procesar la solicitud. Por favor intenta nuevamente.'
                 })
             
-            messages.error(request, 'Error al enviar el email. Por favor intenta nuevamente.')
+            messages.error(request, 'Error al procesar la solicitud. Por favor intenta nuevamente.')
     
     return render(request, 'dashboard/forgot_password.html')
 

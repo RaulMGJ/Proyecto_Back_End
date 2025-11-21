@@ -23,10 +23,14 @@ from dashboard import views as dashboard_views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', dashboard_views.login_view, name='root_login'),
+    path('login/', dashboard_views.login_view, name='login'),
+    path('forgot-password/', dashboard_views.forgot_password_view, name='forgot_password'),
+    path('reset-password/', dashboard_views.reset_password_view, name='reset_password'),
     path('dashboard/', include('dashboard.urls')),
     path('usuarios/', include('usuarios.urls')),
     path('productos/', include('productos.urls')),
     path('proveedores/', include('proveedores.urls')),
+    path('roles/', include('roles.urls')),
 ]
 
 # Servir archivos media en desarrollo
