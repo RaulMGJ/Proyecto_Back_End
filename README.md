@@ -242,4 +242,6 @@ FLUSH PRIVILEGES;
 - Configuración bilingüe (español/inglés)
 - Timezone configurado para Colombia
 
+bla bla bla
+
 ¡Tu sistema está listo para usar con phpMyAdmin! 🎉
