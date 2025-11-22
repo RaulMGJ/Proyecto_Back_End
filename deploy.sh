@@ -29,6 +29,7 @@ echo "📁 Recolectando archivos estáticos..."
 python manage.py collectstatic --noinput
 
 echo "🔄 Reiniciando servidor..."
+sudo systemctl daemon-reload
 sudo systemctl restart dulceria
 
 echo "✅ ¡Despliegue completado exitosamente!"
