@@ -11,6 +11,7 @@ mysqlclient==2.2.7
 Pillow==10.4.0  # Para manejo de imágenes (futuro)
 python-dateutil==2.9.0  # Para manejo de fechas
 pytz==2024.2  # Zona horaria
+openpyxl==3.1.5  # Para exportar/importar archivos Excel
 
 # Herramientas de desarrollo (opcionales)
 django-debug-toolbar==4.4.6  # Para debugging en desarrollo

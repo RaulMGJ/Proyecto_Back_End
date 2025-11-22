@@ -26,7 +26,9 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-na9$ddi6t=y9muaxphwjt
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default='True', cast=lambda x: x.lower() in ['true', '1', 'yes'])
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+# Leer ALLOWED_HOSTS desde .env (separados por comas)
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost').split(',')
+ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS]  # Limpiar espacios
 
 
 # Application definition
@@ -150,6 +152,7 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Media files (User uploads)
 MEDIA_URL = '/media/'
