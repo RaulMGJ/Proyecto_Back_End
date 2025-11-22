@@ -230,9 +230,9 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-floating">
-                                <input type="password" class="form-control" id="password" name="password" placeholder="Contraseña" autocomplete="new-password">
+                                <input type="password" class="form-control" id="password" name="password" placeholder="Contraseña" autocomplete="new-password" minlength="8">
                                 <label for="password">Contraseña <span class="text-danger" id="passwordRequired">*</span></label>
-                                <div class="form-text">Dejar vacío para mantener la contraseña actual</div>
+                                <div class="form-text">Mínimo 8 caracteres, incluir mayúscula y número</div>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -680,6 +680,31 @@
                 confirmButtonColor: '#dc2626'
             });
             return;
+        }
+        
+        // Validar fortaleza de contraseña
+        if (!isEditMode || (isEditMode && password)) {
+            // Validar mayúscula
+            if (!/[A-Z]/.test(password)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Contraseña débil',
+                    text: 'La contraseña debe contener al menos una letra mayúscula',
+                    confirmButtonColor: '#dc2626'
+                });
+                return;
+            }
+            
+            // Validar número
+            if (!/\d/.test(password)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Contraseña débil',
+                    text: 'La contraseña debe contener al menos un número',
+                    confirmButtonColor: '#dc2626'
+                });
+                return;
+            }
         }
         
         // Validar contraseña si se ingresó en modo edición

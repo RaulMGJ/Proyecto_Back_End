@@ -31,12 +31,15 @@ cd ~/Proyecto_Back_End
 ./deploy.sh
 ```
 
-**¡Listo!** El script automáticamente:
-- Descarga los cambios
-- Instala dependencias
-- Aplica migraciones
-- Recolecta archivos estáticos
-- Reinicia el servidor
+**El script automáticamente:**
+- ✅ Descarta cambios locales del servidor (git reset --hard)
+- ✅ Descarga los cambios desde GitHub (git pull)
+- ✅ Instala dependencias nuevas (pip install)
+- ✅ Aplica migraciones de BD (migrate)
+- ✅ Recolecta archivos estáticos (collectstatic)
+- ✅ Reinicia el servidor (systemctl restart)
+
+**⚠️ Nota:** El script descarta TODOS los cambios locales del servidor. Asegúrate de hacer commit en tu PC antes de ejecutarlo.
 
 ## 🛠️ Comandos Útiles del Servidor
 
