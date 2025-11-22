@@ -67,13 +67,14 @@ ROOT_URLCONF = 'dulceria_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],  # Todos los templates están en las apps
+        'DIRS': [BASE_DIR / 'dashboard' / 'templates'],  # Para templates globales como 403.html
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.debug',
             ],
         },
     },

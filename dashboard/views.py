@@ -186,6 +186,11 @@ def inventarios_view(request):
     
     # Verificar permisos según rol
     rol_nombre = user.id_rol.nombre if hasattr(user, 'id_rol') and user.id_rol else None
+    
+    # Bloquear acceso al rol CONSULTA
+    if rol_nombre == 'Consulta':
+        raise PermissionDenied("El rol Consulta no tiene permisos para acceder al inventario")
+    
     es_vendedor = rol_nombre == 'Vendedor'
     es_bodeguero = rol_nombre == 'Bodeguero'
     puede_editar = user.is_superuser or rol_nombre in ['Administrador', 'Bodeguero']
@@ -340,11 +345,15 @@ def editar_producto(request, producto_id):
 def agregar_inventario(request):
     """Vista para agregar un nuevo inventario"""
     user = request.user
+    rol_nombre = user.id_rol.nombre if hasattr(user, 'id_rol') and user.id_rol else None
     
-    # Solo administradores pueden agregar inventarios
-    if not (user.is_superuser or (hasattr(user, 'id_rol') and user.id_rol.nombre == 'Administrador')):
-        messages.error(request, 'Solo los administradores pueden agregar inventarios')
-        return redirect('dashboard:inventarios')
+    # Bloquear acceso a roles sin permisos de escritura (CONSULTA, VENDEDOR)
+    if rol_nombre in ['Consulta', 'Vendedor']:
+        raise PermissionDenied(f"El rol {rol_nombre} no tiene permisos para crear inventarios")
+    
+    # Solo administradores y bodegueros pueden agregar inventarios
+    if not (user.is_superuser or rol_nombre in ['Administrador', 'Bodeguero']):
+        raise PermissionDenied('No tienes permisos para agregar inventarios')
     
     if request.method == 'POST':
         form = InventarioForm(request.POST)
@@ -367,11 +376,15 @@ def editar_inventario(request, inventario_id):
     """Vista para editar un inventario existente"""
     user = request.user
     inventario = get_object_or_404(Inventario, id_inventario=inventario_id)
+    rol_nombre = user.id_rol.nombre if hasattr(user, 'id_rol') and user.id_rol else None
     
-    # Solo administradores pueden editar
-    if not (user.is_superuser or (hasattr(user, 'id_rol') and user.id_rol.nombre == 'Administrador')):
-        messages.error(request, 'No tienes permisos para editar inventarios')
-        return redirect('dashboard:inventarios')
+    # Bloquear acceso a roles sin permisos de escritura (CONSULTA, VENDEDOR)
+    if rol_nombre in ['Consulta', 'Vendedor']:
+        raise PermissionDenied(f"El rol {rol_nombre} no tiene permisos para editar inventarios")
+    
+    # Solo administradores y bodegueros pueden editar
+    if not (user.is_superuser or rol_nombre in ['Administrador', 'Bodeguero']):
+        raise PermissionDenied('No tienes permisos para editar inventarios')
     
     if request.method == 'POST':
         form = InventarioForm(request.POST, instance=inventario)
