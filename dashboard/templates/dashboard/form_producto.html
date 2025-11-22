@@ -731,6 +731,9 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
     let currentStep = 1;
     const totalSteps = 3;
@@ -793,19 +796,34 @@
             const categoria = document.querySelector('[name="categoria"]');
 
             if (!nombre || !nombre.value.trim()) {
-                alert('Por favor ingresa el nombre del producto');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Campo obligatorio',
+                    text: 'Por favor ingresa el nombre del producto',
+                    confirmButtonColor: '#dc2626'
+                });
                 if (nombre) nombre.focus();
                 return false;
             }
 
             if (!sku || !sku.value.trim()) {
-                alert('Por favor ingresa el SKU del producto');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Campo obligatorio',
+                    text: 'Por favor ingresa el SKU del producto',
+                    confirmButtonColor: '#dc2626'
+                });
                 if (sku) sku.focus();
                 return false;
             }
 
             if (!categoria || !categoria.value) {
-                alert('Por favor selecciona una categoría');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Campo obligatorio',
+                    text: 'Por favor selecciona una categoría',
+                    confirmButtonColor: '#dc2626'
+                });
                 if (categoria) categoria.focus();
                 return false;
             }
@@ -821,25 +839,45 @@
             const stockMinimo = document.querySelector('[name="stock_minimo"]');
 
             if (!precio || !precio.value || parseFloat(precio.value) <= 0) {
-                alert('Por favor ingresa un precio válido');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Campo obligatorio',
+                    text: 'Por favor ingresa un precio válido',
+                    confirmButtonColor: '#dc2626'
+                });
                 if (precio) precio.focus();
                 return false;
             }
 
             if (!unidadCompra || !unidadCompra.value) {
-                alert('Por favor selecciona la unidad de compra');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Campo obligatorio',
+                    text: 'Por favor selecciona la unidad de compra',
+                    confirmButtonColor: '#dc2626'
+                });
                 if (unidadCompra) unidadCompra.focus();
                 return false;
             }
 
             if (!unidadVenta || !unidadVenta.value) {
-                alert('Por favor selecciona la unidad de venta');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Campo obligatorio',
+                    text: 'Por favor selecciona la unidad de venta',
+                    confirmButtonColor: '#dc2626'
+                });
                 if (unidadVenta) unidadVenta.focus();
                 return false;
             }
 
             if (!stockMinimo || stockMinimo.value === '') {
-                alert('Por favor ingresa el stock mínimo');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Campo obligatorio',
+                    text: 'Por favor ingresa el stock mínimo',
+                    confirmButtonColor: '#dc2626'
+                });
                 if (stockMinimo) stockMinimo.focus();
                 return false;
             }
@@ -884,10 +922,27 @@
         const clearBtn = document.querySelector('[data-action="clearForm"]');
         if (clearBtn) {
             clearBtn.addEventListener('click', function() {
-                if (confirm('¿Estás seguro de limpiar el formulario?')) {
-                    document.getElementById('productForm').reset();
-                    showStep(1);
-                }
+                Swal.fire({
+                    title: '¿Limpiar formulario?',
+                    text: 'Se perderán todos los datos ingresados',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Sí, limpiar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('productForm').reset();
+                        showStep(1);
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Formulario limpiado',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                    }
+                });
             });
         }
 
@@ -928,34 +983,39 @@
                 const productNameEl = productRow ? productRow.querySelector('.product-name') : null;
                 const productName = productNameEl ? productNameEl.textContent : 'este producto';
                 
-                if (confirm(`¿Estás seguro de eliminar "${productName}"?`)) {
-                    fetch(`/productos/eliminar/${productId}/`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            if (productRow) productRow.remove();
-                            // Mostrar alerta de éxito
-                            const alertContainer = document.querySelector('.container-fluid');
-                            if (alertContainer) {
-                                const alert = document.createElement('div');
-                                alert.className = 'alert alert-success alert-dismissible fade show';
-                                alert.innerHTML = `
-                                    <i class="bi bi-check-circle-fill me-2"></i>
-                                    Producto eliminado exitosamente
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                `;
-                                alertContainer.insertBefore(alert, alertContainer.firstChild);
-                                setTimeout(() => alert.remove(), 3000);
+                Swal.fire({
+                    title: '¿Eliminar producto?',
+                    text: `¿Estás seguro de eliminar "${productName}"?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(`/productos/eliminar/${productId}/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                                'Content-Type': 'application/json'
                             }
-                        }
-                    })
-                    .catch(error => console.error('Error:', error));
-                }
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                if (productRow) productRow.remove();
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: '¡Eliminado!',
+                                    text: 'Producto eliminado exitosamente',
+                                    confirmButtonColor: '#dc2626',
+                                    timer: 2000
+                                });
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                    }
+                });
             });
         });
 
@@ -963,7 +1023,12 @@
         const exportBtn = document.querySelector('.export-btn');
         if (exportBtn) {
             exportBtn.addEventListener('click', function() {
-                alert('Funcionalidad de exportación en desarrollo...');
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Funcionalidad en desarrollo',
+                    text: 'La exportación de productos estará disponible próximamente',
+                    confirmButtonColor: '#dc2626'
+                });
             });
         }
 
