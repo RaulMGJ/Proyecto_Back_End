@@ -20,7 +20,7 @@ from usuarios.models import Usuario, PasswordResetToken
 from .forms import ProductoForm, InventarioForm
 
 def login_view(request):
-    """Vista de login personalizada"""
+    """Vista de login personalizada con protección anti-fuerza bruta"""
     # Si el usuario ya está autenticado, redirigir al dashboard
     if request.user.is_authenticated:
         return redirect('dashboard:home')
@@ -29,12 +29,57 @@ def login_view(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
         
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect('dashboard:home')
-        else:
-            messages.error(request, 'Usuario o contraseña incorrectos')
+        # Verificar si el usuario existe
+        try:
+            user_obj = Usuario.objects.get(username=username)
+            
+            # Verificar si la cuenta está bloqueada
+            if user_obj.is_account_locked():
+                tiempo_restante = int((user_obj.locked_until - timezone.now()).total_seconds() / 60)
+                context = {
+                    'error_type': 'locked',
+                    'locked_minutes': tiempo_restante,
+                    'username': username
+                }
+                return render(request, 'dashboard/new_login.html', context)
+            
+            # Intentar autenticar
+            user = authenticate(request, username=username, password=password)
+            
+            if user is not None:
+                # Login exitoso - resetear intentos fallidos
+                user_obj.reset_failed_attempts()
+                login(request, user)
+                return redirect('dashboard:home')
+            else:
+                # Contraseña incorrecta - incrementar intentos fallidos
+                user_obj.increment_failed_attempts()
+                intentos_restantes = 5 - user_obj.failed_login_attempts
+                
+                if user_obj.is_account_locked():
+                    # Cuenta bloqueada
+                    context = {
+                        'error_type': 'locked',
+                        'locked_minutes': 30,
+                        'username': username
+                    }
+                else:
+                    # Advertencia de intentos restantes
+                    context = {
+                        'error_type': 'invalid',
+                        'attempts_remaining': intentos_restantes,
+                        'username': username
+                    }
+                
+                return render(request, 'dashboard/new_login.html', context)
+        
+        except Usuario.DoesNotExist:
+            # Usuario no existe - no dar pistas de seguridad
+            context = {
+                'error_type': 'invalid',
+                'username': username
+            }
+            return render(request, 'dashboard/new_login.html', context)
     
     return render(request, 'dashboard/new_login.html')
 

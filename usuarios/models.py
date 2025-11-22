@@ -16,6 +16,10 @@ class Usuario(AbstractUser):
     telefono = models.CharField(max_length=20, blank=True, null=True, verbose_name="Teléfono")
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True, verbose_name="Avatar")
     
+    # Campos de seguridad anti-fuerza bruta
+    failed_login_attempts = models.IntegerField(default=0, verbose_name="Intentos fallidos de login")
+    locked_until = models.DateTimeField(null=True, blank=True, verbose_name="Bloqueado hasta")
+    
     # Campos adicionales para AbstractUser
     username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(blank=True)
@@ -38,6 +42,28 @@ class Usuario(AbstractUser):
         if not self.email:
             self.email = self.correo
         super().save(*args, **kwargs)
+    
+    def is_account_locked(self):
+        """Verifica si la cuenta está bloqueada por intentos fallidos"""
+        if self.locked_until and timezone.now() < self.locked_until:
+            return True
+        return False
+    
+    def reset_failed_attempts(self):
+        """Resetea el contador de intentos fallidos"""
+        self.failed_login_attempts = 0
+        self.locked_until = None
+        self.save(update_fields=['failed_login_attempts', 'locked_until'])
+    
+    def increment_failed_attempts(self):
+        """Incrementa el contador de intentos fallidos y bloquea si es necesario"""
+        self.failed_login_attempts += 1
+        
+        # Bloquear cuenta después de 5 intentos fallidos por 30 minutos
+        if self.failed_login_attempts >= 5:
+            self.locked_until = timezone.now() + timedelta(minutes=30)
+        
+        self.save(update_fields=['failed_login_attempts', 'locked_until'])
 
 
 class PasswordResetToken(models.Model):
