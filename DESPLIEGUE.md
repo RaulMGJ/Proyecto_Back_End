@@ -28,6 +28,9 @@ git push origin main
 ### 2. En el servidor EC2 (conectar por SSH):
 ```bash
 cd ~/Proyecto_Back_End
+#Si dice permision denied ejecutar:
+ chmod +x deploy.sh
+# luego ejecutar:
 ./deploy.sh
 ```
 
