@@ -593,7 +593,19 @@ def guardar_usuario(request):
         nombre = request.POST.get('nombre')
         telefono = request.POST.get('telefono', '')
         id_rol = request.POST.get('id_rol')
-        activo = request.POST.get('activo') == 'on'
+        activo_str = request.POST.get('activo')
+        
+        # Convertir el valor del select a booleano
+        if activo_str == 'true':
+            activo = True
+        elif activo_str == 'false':
+            activo = False
+        else:
+            # Si no se seleccionó ningún estado, retornar error
+            return JsonResponse({
+                'success': False,
+                'errors': {'activo': ['Debes seleccionar un estado (Activo o Inactivo)']}
+            })
         
         # Validaciones básicas
         if not all([usuario_username, email, nombre, id_rol]):

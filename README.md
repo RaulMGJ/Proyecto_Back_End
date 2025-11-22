@@ -105,8 +105,8 @@ python manage.py runserver
 |-----|---------|------------|----------|
 | **Administrador** | `admin` | `admin123` | Acceso completo a todo |
 | **Vendedor** | `vendedor1` | `vendedor123` | Solo lectura productos/inventarios |
-| **Bodeguero** | `bodeguero1` | `bodeguero123` | Gestión productos e inventarios |
-| **Cliente** | `cliente1` | `cliente123` | Bloqueado del admin |
+| **Bodeguero** | `bodeguero1` | `bodega123` | Gestión productos e inventarios |
+| **Consulta** | `cliente2` | `Contraseña,1` | Bloqueado del admin |
 
 ## 🏗️ **Estructura del Proyecto**
 
@@ -127,7 +127,7 @@ eva2backend/
 ## 🗄️ **Base de Datos**
 
 ### **📊 Tablas Creadas:**
-- `rol` - Roles de usuario (Administrador, Vendedor, Bodeguero, Cliente)
+- `rol` - Roles de usuario (Administrador, Vendedor, Bodeguero, Consulta)
 - `usuario` - Usuarios del sistema con autenticación personalizada
 - `producto` - Catálogo de productos de dulcería
 - `inventario` - Control de stock por ubicación
@@ -135,15 +135,15 @@ eva2backend/
 - `auth_*` - Tablas de autenticación de Django
 
 ### **📦 Datos Iniciales:**
-- **4 roles** predefinidos
-- **4 usuarios** de ejemplo
+- **4 roles** predefinidos (Administrador, Vendedor, Bodeguero, Consulta)
+- **4 usuarios** de ejemplo con diferentes permisos
 - **5 productos** de dulcería (chocolates, gomitas, caramelos, etc.)
 - **7 registros** de inventario con diferentes ubicaciones
 
 ## 🔒 **Seguridad por Roles**
 
 ### **🛡️ Middleware de Control:**
-- **Clientes**: Acceso completamente bloqueado al admin
+- **Consulta**: Acceso completamente bloqueado al admin
 - **Vendedores**: Solo productos e inventarios (lectura, solo stock > 0)
 - **Bodegueros**: Productos e inventarios (lectura/escritura completa)
 - **Administradores**: Acceso completo a todas las funcionalidades
@@ -223,8 +223,8 @@ FLUSH PRIVILEGES;
 ### **👤 Usuarios de Prueba:**
 - **admin** / admin123 (Administrador completo)
 - **vendedor1** / vendedor123 (Solo lectura)
-- **bodeguero1** / bodeguero123 (Gestión inventarios)
-- **cliente1** / cliente123 (Bloqueado)
+- **bodeguero1** / bodega123 (Gestión inventarios)
+- **cliente2** / Contraseña,1 (Bloqueado)
 
 ## 🎯 **Próximos Pasos**
 
@@ -241,7 +241,5 @@ FLUSH PRIVILEGES;
 - Middleware personalizado para control de acceso
 - Configuración bilingüe (español/inglés)
 - Timezone configurado para Colombia
-
-bla bla bla
 
 ¡Tu sistema está listo para usar con phpMyAdmin! 🎉

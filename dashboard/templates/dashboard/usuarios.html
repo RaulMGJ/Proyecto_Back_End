@@ -277,11 +277,13 @@
                     
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="activo" name="activo" checked>
-                                <label class="form-check-label" for="activo">
-                                    Usuario activo
-                                </label>
+                            <div class="form-floating">
+                                <select class="form-select" id="activo" name="activo" required>
+                                    <option value="">Seleccionar estado</option>
+                                    <option value="true">Activo</option>
+                                    <option value="false">Inactivo</option>
+                                </select>
+                                <label for="activo">Estado <span class="text-danger">*</span></label>
                             </div>
                             <small class="text-muted">Los usuarios inactivos no pueden iniciar sesión</small>
                         </div>
@@ -346,7 +348,7 @@
         document.getElementById('password').required = true;
         document.getElementById('userForm').reset();
         document.getElementById('userId').value = '';
-        document.getElementById('activo').checked = true;
+        document.getElementById('activo').value = '';
     }
     
     function editUser(userId) {
@@ -417,7 +419,7 @@
                 document.getElementById('nombre').value = usuario.nombre;
                 document.getElementById('telefono').value = usuario.telefono;
                 document.getElementById('id_rol').value = usuario.id_rol;
-                document.getElementById('activo').checked = usuario.is_active;
+                document.getElementById('activo').value = usuario.is_active ? 'true' : 'false';
                 document.getElementById('cambiar_password').checked = usuario.cambiar_password;
                 
                 // Limpiar campo de contraseña
@@ -641,16 +643,17 @@
         const password = document.getElementById('password').value;
         const nombre = document.getElementById('nombre').value.trim();
         const rol = document.getElementById('id_rol').value;
+        const estado = document.getElementById('activo').value;
         
         // Debug
-        console.log('Validando formulario:', {usuario, email, nombre, rol, password: password ? '***' : ''});
+        console.log('Validando formulario:', {usuario, email, nombre, rol, estado, password: password ? '***' : ''});
         
         // Validar campos requeridos (teléfono no es requerido)
-        if (!usuario || !email || !nombre || !rol) {
+        if (!usuario || !email || !nombre || !rol || !estado) {
             Swal.fire({
                 icon: 'error',
                 title: 'Campos incompletos',
-                text: 'Por favor completa todos los campos requeridos (Usuario, Email, Nombre y Rol)',
+                text: 'Por favor completa todos los campos requeridos (Usuario, Email, Nombre, Rol y Estado)',
                 confirmButtonColor: '#dc2626'
             });
             return;
