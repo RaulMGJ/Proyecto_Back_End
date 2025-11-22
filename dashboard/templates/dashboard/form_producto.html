@@ -631,13 +631,29 @@
                             </div>
                         {% endif %}
 
-                        <div class="d-flex gap-3 mt-4">
-                            <button type="submit" class="btn-primary">
-                                <i class="bi bi-check-circle me-2"></i>Guardar Producto
+                        <!-- Botones de navegación por pasos -->
+                        <div class="d-flex justify-content-between gap-3 mt-4">
+                            <!-- Botón Anterior (solo pasos 2 y 3) -->
+                            <button type="button" class="btn-secondary" id="btnPrevious" style="display: none;" onclick="previousStep()">
+                                <i class="bi bi-arrow-left me-2"></i>Anterior
                             </button>
-                            <button type="button" class="btn-secondary" data-action="clearForm">
-                                <i class="bi bi-x-circle me-2"></i>Limpiar Formulario
-                            </button>
+                            
+                            <div class="ms-auto d-flex gap-3">
+                                <!-- Botón Limpiar -->
+                                <button type="button" class="btn-secondary" data-action="clearForm">
+                                    <i class="bi bi-x-circle me-2"></i>Limpiar
+                                </button>
+                                
+                                <!-- Botón Siguiente (pasos 1 y 2) -->
+                                <button type="button" class="btn-primary" id="btnNext" onclick="nextStep()">
+                                    Siguiente<i class="bi bi-arrow-right ms-2"></i>
+                                </button>
+                                
+                                <!-- Botón Guardar (solo paso 3) -->
+                                <button type="submit" class="btn-primary" id="btnSubmit" style="display: none;">
+                                    <i class="bi bi-check-circle me-2"></i>Guardar Producto
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -716,39 +732,151 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        let currentStep = 1;
-        const totalSteps = 3;
+    let currentStep = 1;
+    const totalSteps = 3;
 
-        // Función para mostrar paso específico
-        function showStep(step) {
-            // Actualizar contenido de pasos
-            document.querySelectorAll('.step-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            const targetStep = document.getElementById('content-step' + step);
-            if (targetStep) {
-                targetStep.classList.add('active');
-            }
-
-            // Actualizar indicadores de paso
-            document.querySelectorAll('.step').forEach((stepEl, index) => {
-                stepEl.classList.remove('active', 'completed');
-                if (index + 1 < step) {
-                    stepEl.classList.add('completed');
-                } else if (index + 1 === step) {
-                    stepEl.classList.add('active');
-                }
-            });
-
-            currentStep = step;
+    // Función para mostrar paso específico
+    function showStep(step) {
+        // Actualizar contenido de pasos
+        document.querySelectorAll('.step-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        const targetStep = document.getElementById('content-step' + step);
+        if (targetStep) {
+            targetStep.classList.add('active');
         }
 
-        // Event listeners para los pasos
+        // Actualizar indicadores de paso
+        document.querySelectorAll('.step').forEach((stepEl, index) => {
+            stepEl.classList.remove('active', 'completed');
+            if (index + 1 < step) {
+                stepEl.classList.add('completed');
+            } else if (index + 1 === step) {
+                stepEl.classList.add('active');
+            }
+        });
+
+        currentStep = step;
+        updateNavigationButtons();
+    }
+
+    // Actualizar visibilidad de botones según el paso
+    function updateNavigationButtons() {
+        const btnPrevious = document.getElementById('btnPrevious');
+        const btnNext = document.getElementById('btnNext');
+        const btnSubmit = document.getElementById('btnSubmit');
+
+        // Botón Anterior: visible en pasos 2 y 3
+        if (currentStep > 1) {
+            btnPrevious.style.display = 'block';
+        } else {
+            btnPrevious.style.display = 'none';
+        }
+
+        // Botón Siguiente: visible en pasos 1 y 2
+        if (currentStep < totalSteps) {
+            btnNext.style.display = 'block';
+            btnSubmit.style.display = 'none';
+        } else {
+            // Paso 3: mostrar Guardar
+            btnNext.style.display = 'none';
+            btnSubmit.style.display = 'block';
+        }
+    }
+
+    // Validar paso actual antes de avanzar
+    function validateCurrentStep() {
+        if (currentStep === 1) {
+            // Validar Paso 1: Información Básica
+            const nombre = document.querySelector('[name="nombre"]');
+            const sku = document.querySelector('[name="sku"]');
+            const categoria = document.querySelector('[name="categoria"]');
+
+            if (!nombre || !nombre.value.trim()) {
+                alert('Por favor ingresa el nombre del producto');
+                if (nombre) nombre.focus();
+                return false;
+            }
+
+            if (!sku || !sku.value.trim()) {
+                alert('Por favor ingresa el SKU del producto');
+                if (sku) sku.focus();
+                return false;
+            }
+
+            if (!categoria || !categoria.value) {
+                alert('Por favor selecciona una categoría');
+                if (categoria) categoria.focus();
+                return false;
+            }
+
+            return true;
+        }
+
+        if (currentStep === 2) {
+            // Validar Paso 2: Precios y Stock
+            const precio = document.querySelector('[name="precio_referencia"]');
+            const unidadCompra = document.querySelector('[name="unidad_compra"]');
+            const unidadVenta = document.querySelector('[name="unidad_venta"]');
+            const stockMinimo = document.querySelector('[name="stock_minimo"]');
+
+            if (!precio || !precio.value || parseFloat(precio.value) <= 0) {
+                alert('Por favor ingresa un precio válido');
+                if (precio) precio.focus();
+                return false;
+            }
+
+            if (!unidadCompra || !unidadCompra.value) {
+                alert('Por favor selecciona la unidad de compra');
+                if (unidadCompra) unidadCompra.focus();
+                return false;
+            }
+
+            if (!unidadVenta || !unidadVenta.value) {
+                alert('Por favor selecciona la unidad de venta');
+                if (unidadVenta) unidadVenta.focus();
+                return false;
+            }
+
+            if (!stockMinimo || stockMinimo.value === '') {
+                alert('Por favor ingresa el stock mínimo');
+                if (stockMinimo) stockMinimo.focus();
+                return false;
+            }
+
+            return true;
+        }
+
+        // Paso 3: Sin validaciones obligatorias (opcionales)
+        return true;
+    }
+
+    // Ir al siguiente paso
+    function nextStep() {
+        if (validateCurrentStep()) {
+            if (currentStep < totalSteps) {
+                showStep(currentStep + 1);
+            }
+        }
+    }
+
+    // Ir al paso anterior
+    function previousStep() {
+        if (currentStep > 1) {
+            showStep(currentStep - 1);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // Event listeners para los pasos (permitir click solo en pasos completados)
         document.querySelectorAll('[data-action="showStep"]').forEach(step => {
             step.addEventListener('click', function() {
                 const stepNumber = parseInt(this.dataset.step);
-                showStep(stepNumber);
+                // Permitir navegar solo a pasos anteriores o actual
+                if (stepNumber <= currentStep) {
+                    showStep(stepNumber);
+                }
             });
         });
 
@@ -839,77 +967,20 @@
             });
         }
 
-        // Validación de formulario
+        // Validación final del formulario (al hacer submit)
         const form = document.getElementById('productForm');
         if (form) {
             form.addEventListener('submit', function(event) {
-                const nombre = document.querySelector('[name="nombre"]');
-                const sku = document.querySelector('[name="sku"]');
-                const categoria = document.querySelector('[name="categoria"]');
-                const precio = document.querySelector('[name="precio_referencia"]');
-                const unidadCompra = document.querySelector('[name="unidad_compra"]');
-                const unidadVenta = document.querySelector('[name="unidad_venta"]');
-                const stockMinimo = document.querySelector('[name="stock_minimo"]');
-                
-                // Validar Paso 1
-                if (!nombre || !nombre.value.trim()) {
+                // Validar todos los pasos antes de enviar
+                if (!validateCurrentStep()) {
                     event.preventDefault();
-                    alert('Por favor ingresa el nombre del producto');
-                    showStep(1);
-                    if (nombre) nombre.focus();
-                    return false;
-                }
-                
-                if (!sku || !sku.value.trim()) {
-                    event.preventDefault();
-                    alert('Por favor ingresa el SKU del producto');
-                    showStep(1);
-                    if (sku) sku.focus();
-                    return false;
-                }
-                
-                if (!categoria || !categoria.value) {
-                    event.preventDefault();
-                    alert('Por favor selecciona una categoría');
-                    showStep(1);
-                    if (categoria) categoria.focus();
-                    return false;
-                }
-                
-                // Validar Paso 2
-                if (!precio || !precio.value || parseFloat(precio.value) <= 0) {
-                    event.preventDefault();
-                    alert('Por favor ingresa un precio válido');
-                    showStep(2);
-                    if (precio) precio.focus();
-                    return false;
-                }
-                
-                if (!unidadCompra || !unidadCompra.value) {
-                    event.preventDefault();
-                    alert('Por favor selecciona la unidad de compra');
-                    showStep(2);
-                    if (unidadCompra) unidadCompra.focus();
-                    return false;
-                }
-                
-                if (!unidadVenta || !unidadVenta.value) {
-                    event.preventDefault();
-                    alert('Por favor selecciona la unidad de venta');
-                    showStep(2);
-                    if (unidadVenta) unidadVenta.focus();
-                    return false;
-                }
-                
-                if (!stockMinimo || stockMinimo.value === '') {
-                    event.preventDefault();
-                    alert('Por favor ingresa el stock mínimo');
-                    showStep(2);
-                    if (stockMinimo) stockMinimo.focus();
                     return false;
                 }
             });
         }
+        
+        // Inicializar botones
+        updateNavigationButtons();
 
         // Auto-cerrar alertas
         setTimeout(() => {
