@@ -294,8 +294,8 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="lilis-form-label">RUC *</label>
-                                <input type="text" class="lilis-form-control" name="ruc" required maxlength="11">
-                                <div class="lilis-form-text">Registro Único de Contribuyente</div>
+                                <input type="text" class="lilis-form-control" name="ruc" required maxlength="11" pattern="[0-9]{11}" title="Debe contener exactamente 11 dígitos">
+                                <div class="lilis-form-text">Registro Único de Contribuyente (11 dígitos)</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="lilis-form-label">Persona de Contacto</label>
@@ -453,6 +453,9 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
     let currentStep = 1;
     const totalSteps = 3;
@@ -526,22 +529,58 @@
     function validateCurrentStep() {
         const currentStepContent = document.querySelector(`.step-content[data-step="${currentStep}"]`);
         const requiredFields = currentStepContent.querySelectorAll('[required]');
-        let isValid = true;
         
-        requiredFields.forEach(field => {
-            if (!field.value.trim()) {
-                field.classList.add('is-invalid');
-                isValid = false;
-            } else {
-                field.classList.remove('is-invalid');
+        // Validar cada campo requerido
+        for (let field of requiredFields) {
+            const value = field.value.trim();
+            const fieldName = field.name;
+            const label = field.previousElementSibling?.textContent || fieldName;
+            
+            if (!value) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Campo obligatorio',
+                    text: `Por favor completa el campo: ${label}`,
+                    confirmButtonColor: '#4F81F7',
+                    confirmButtonText: 'Entendido'
+                });
+                field.focus();
+                return false;
             }
-        });
-        
-        if (!isValid) {
-            LilisSystem.showAlert('Por favor completa todos los campos requeridos', 'warning');
+            
+            // Validación específica para email
+            if (field.type === 'email' && value) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(value)) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Email inválido',
+                        text: 'Por favor ingresa un email válido',
+                        confirmButtonColor: '#4F81F7',
+                        confirmButtonText: 'Corregir'
+                    });
+                    field.focus();
+                    return false;
+                }
+            }
+            
+            // Validación específica para RUC (11 dígitos)
+            if (fieldName === 'ruc' && value) {
+                if (!/^\d{11}$/.test(value)) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'RUC inválido',
+                        text: 'El RUC debe tener exactamente 11 dígitos numéricos',
+                        confirmButtonColor: '#4F81F7',
+                        confirmButtonText: 'Corregir'
+                    });
+                    field.focus();
+                    return false;
+                }
+            }
         }
         
-        return isValid;
+        return true;
     }
     
     function submitProvider() {
