@@ -412,17 +412,17 @@
                                 <div class="col-md-6">
                                     <div class="form-field">
                                         <label class="form-label">
-                                            <i class="bi bi-upc me-1"></i>SKU <span class="text-muted">(opcional)</span>
+                                            <i class="bi bi-upc me-1"></i>SKU <span class="text-danger">*</span>
                                         </label>
-                                        <input type="text" class="form-input" name="sku" placeholder="SKU-001">
+                                        <input type="text" class="form-input" name="sku" placeholder="SKU-001" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-field">
                                         <label class="form-label">
-                                            <i class="bi bi-grid me-1"></i>Categoría
+                                            <i class="bi bi-grid me-1"></i>Categoría <span class="text-danger">*</span>
                                         </label>
-                                        <select class="form-select" name="categoria">
+                                        <select class="form-select" name="categoria" required>
                                             <option value="">Seleccione...</option>
                                             <option value="Dulces">🍬 Dulces</option>
                                             <option value="Chocolates">🍫 Chocolates</option>
@@ -487,9 +487,9 @@
                                 <div class="col-md-4">
                                     <div class="form-field">
                                         <label class="form-label">
-                                            <i class="bi bi-dash-circle me-1"></i>Stock Mínimo
+                                            <i class="bi bi-dash-circle me-1"></i>Stock Mínimo <span class="text-danger">*</span>
                                         </label>
-                                        <input type="number" class="form-input" name="stock_minimo" placeholder="0" value="0">
+                                        <input type="number" class="form-input" name="stock_minimo" placeholder="0" required>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -514,9 +514,9 @@
                                 <div class="col-md-6">
                                     <div class="form-field">
                                         <label class="form-label">
-                                            <i class="bi bi-box2 me-1"></i>Unidad de Compra
+                                            <i class="bi bi-box2 me-1"></i>Unidad de Compra <span class="text-danger">*</span>
                                         </label>
-                                        <select class="form-select" name="unidad_compra">
+                                        <select class="form-select" name="unidad_compra" required>
                                             <option value="">Seleccione...</option>
                                             <option value="Unidad">Unidad</option>
                                             <option value="Caja">Caja</option>
@@ -526,6 +526,23 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6">
+                                    <div class="form-field">
+                                        <label class="form-label">
+                                            <i class="bi bi-box2-heart me-1"></i>Unidad de Venta <span class="text-danger">*</span>
+                                        </label>
+                                        <select class="form-select" name="unidad_venta" required>
+                                            <option value="">Seleccione...</option>
+                                            <option value="Unidad">Unidad</option>
+                                            <option value="Caja">Caja</option>
+                                            <option value="Paquete">Paquete</option>
+                                            <option value="Docena">Docena</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
                                     <div class="form-field">
                                         <label class="form-label">
                                             <i class="bi bi-calculator me-1"></i>Factor de Conversión
@@ -827,8 +844,14 @@
         if (form) {
             form.addEventListener('submit', function(event) {
                 const nombre = document.querySelector('[name="nombre"]');
+                const sku = document.querySelector('[name="sku"]');
+                const categoria = document.querySelector('[name="categoria"]');
                 const precio = document.querySelector('[name="precio_referencia"]');
+                const unidadCompra = document.querySelector('[name="unidad_compra"]');
+                const unidadVenta = document.querySelector('[name="unidad_venta"]');
+                const stockMinimo = document.querySelector('[name="stock_minimo"]');
                 
+                // Validar Paso 1
                 if (!nombre || !nombre.value.trim()) {
                     event.preventDefault();
                     alert('Por favor ingresa el nombre del producto');
@@ -837,11 +860,52 @@
                     return false;
                 }
                 
+                if (!sku || !sku.value.trim()) {
+                    event.preventDefault();
+                    alert('Por favor ingresa el SKU del producto');
+                    showStep(1);
+                    if (sku) sku.focus();
+                    return false;
+                }
+                
+                if (!categoria || !categoria.value) {
+                    event.preventDefault();
+                    alert('Por favor selecciona una categoría');
+                    showStep(1);
+                    if (categoria) categoria.focus();
+                    return false;
+                }
+                
+                // Validar Paso 2
                 if (!precio || !precio.value || parseFloat(precio.value) <= 0) {
                     event.preventDefault();
                     alert('Por favor ingresa un precio válido');
                     showStep(2);
                     if (precio) precio.focus();
+                    return false;
+                }
+                
+                if (!unidadCompra || !unidadCompra.value) {
+                    event.preventDefault();
+                    alert('Por favor selecciona la unidad de compra');
+                    showStep(2);
+                    if (unidadCompra) unidadCompra.focus();
+                    return false;
+                }
+                
+                if (!unidadVenta || !unidadVenta.value) {
+                    event.preventDefault();
+                    alert('Por favor selecciona la unidad de venta');
+                    showStep(2);
+                    if (unidadVenta) unidadVenta.focus();
+                    return false;
+                }
+                
+                if (!stockMinimo || stockMinimo.value === '') {
+                    event.preventDefault();
+                    alert('Por favor ingresa el stock mínimo');
+                    showStep(2);
+                    if (stockMinimo) stockMinimo.focus();
                     return false;
                 }
             });
