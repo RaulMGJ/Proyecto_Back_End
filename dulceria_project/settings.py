@@ -181,3 +181,10 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 SESSION_COOKIE_HTTPONLY = False
 SESSION_COOKIE_SECURE = False  # Solo si usas HTTPS en producción
 SESSION_COOKIE_SAMESITE = None  # O 'Strict' para máxima seguridad
+
+# --- IMPORTANTE ---
+# Cuando pongas el sitio en producción con HTTPS, cambia a:
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SECURE = True
+# SESSION_COOKIE_SAMESITE = 'Lax'  # o 'Strict' si tu frontend lo permite
+# ------------------
