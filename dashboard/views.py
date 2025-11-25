@@ -1,4 +1,18 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
+from django.core.exceptions import PermissionDenied
+from django.contrib import messages
+from django.http import JsonResponse, HttpResponse
+from django.utils import timezone
+from django.core.paginator import Paginator
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
 # --- API para eliminar producto ---
 @login_required
 @require_POST
@@ -46,19 +60,6 @@ def eliminar_inventario(request, inventario_id):
         return JsonResponse({'success': True, 'message': f'Inventario de "{producto_nombre}" eliminado correctamente'})
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
-from django.contrib import messages
-from django.http import JsonResponse, HttpResponse
-from django.utils import timezone
-from django.core.paginator import Paginator
-from django.core.mail import send_mail
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
-import openpyxl
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from datetime import datetime
 from django.contrib.auth.hashers import make_password
 from django.conf import settings
