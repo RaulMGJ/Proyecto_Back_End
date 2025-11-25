@@ -1,3 +1,51 @@
+from django.views.decorators.http import require_POST
+# --- API para eliminar producto ---
+@login_required
+@require_POST
+def eliminar_producto(request, producto_id):
+    user = request.user
+    # Solo administradores pueden eliminar
+    if not (user.is_superuser or (hasattr(user, 'id_rol') and user.id_rol.nombre == 'Administrador')):
+        return JsonResponse({'success': False, 'message': 'No tienes permisos'}, status=403)
+    try:
+        producto = get_object_or_404(Producto, id_producto=producto_id)
+        nombre = producto.nombre
+        producto.delete()
+        # Auditoría
+        Auditoria.objects.create(
+            usuario=user,
+            accion='BORRAR',
+            entidad='Producto',
+            detalle=f'ID: {producto_id}, Nombre: {nombre}'
+        )
+        return JsonResponse({'success': True, 'message': f'Producto "{nombre}" eliminado correctamente'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+# --- API para eliminar inventario ---
+@login_required
+@require_POST
+def eliminar_inventario(request, inventario_id):
+    user = request.user
+    rol_nombre = user.id_rol.nombre if hasattr(user, 'id_rol') and user.id_rol else None
+    # Solo administradores y bodegueros pueden eliminar
+    if not (user.is_superuser or rol_nombre in ['Administrador', 'Bodeguero']):
+        return JsonResponse({'success': False, 'message': 'No tienes permisos'}, status=403)
+    try:
+        inventario = get_object_or_404(Inventario, id_inventario=inventario_id)
+        producto_nombre = inventario.id_producto.nombre
+        ubicacion = inventario.ubicacion
+        inventario.delete()
+        # Auditoría
+        Auditoria.objects.create(
+            usuario=user,
+            accion='BORRAR',
+            entidad='Inventario',
+            detalle=f'ID: {inventario_id}, Producto: {producto_nombre}, Ubicación: {ubicacion}'
+        )
+        return JsonResponse({'success': True, 'message': f'Inventario de "{producto_nombre}" eliminado correctamente'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -18,6 +66,7 @@ from productos.models import Producto
 from inventarios.models import Inventario
 from usuarios.models import Usuario, PasswordResetToken
 from .forms import ProductoForm, InventarioForm
+from .models import Auditoria
 
 def login_view(request):
     """Vista de login personalizada con protección anti-fuerza bruta"""
@@ -299,6 +348,13 @@ def agregar_producto(request):
         form = ProductoForm(request.POST)
         if form.is_valid():
             producto = form.save()
+            # Auditoría
+            Auditoria.objects.create(
+                usuario=user,
+                accion='CREAR',
+                entidad='Producto',
+                detalle=f'ID: {producto.id_producto}, Nombre: {producto.nombre}'
+            )
             messages.success(request, f'Producto "{producto.nombre}" agregado exitosamente')
             return redirect('dashboard:productos')
         else:
@@ -327,7 +383,14 @@ def editar_producto(request, producto_id):
     if request.method == 'POST':
         form = ProductoForm(request.POST, instance=producto)
         if form.is_valid():
-            form.save()
+            producto = form.save()
+            # Auditoría
+            Auditoria.objects.create(
+                usuario=user,
+                accion='EDITAR',
+                entidad='Producto',
+                detalle=f'ID: {producto.id_producto}, Nombre: {producto.nombre}'
+            )
             messages.success(request, 'Producto actualizado exitosamente')
             return redirect('dashboard:productos')
     else:
@@ -358,7 +421,14 @@ def agregar_inventario(request):
     if request.method == 'POST':
         form = InventarioForm(request.POST)
         if form.is_valid():
-            form.save()
+            inventario = form.save()
+            # Auditoría
+            Auditoria.objects.create(
+                usuario=user,
+                accion='CREAR',
+                entidad='Inventario',
+                detalle=f'ID: {inventario.id_inventario}, Producto: {inventario.id_producto.nombre}, Ubicación: {inventario.ubicacion}'
+            )
             messages.success(request, 'Inventario agregado exitosamente')
             return redirect('dashboard:inventarios')
     else:
@@ -389,7 +459,14 @@ def editar_inventario(request, inventario_id):
     if request.method == 'POST':
         form = InventarioForm(request.POST, instance=inventario)
         if form.is_valid():
-            form.save()
+            inventario = form.save()
+            # Auditoría
+            Auditoria.objects.create(
+                usuario=user,
+                accion='EDITAR',
+                entidad='Inventario',
+                detalle=f'ID: {inventario.id_inventario}, Producto: {inventario.id_producto.nombre}, Ubicación: {inventario.ubicacion}'
+            )
             messages.success(request, 'Inventario actualizado exitosamente')
             return redirect('dashboard:inventarios')
     else:
@@ -707,6 +784,13 @@ def guardar_usuario(request):
                 usuario.set_password(password)
             
             usuario.save()
+            # Auditoría
+            Auditoria.objects.create(
+                usuario=user,
+                accion='EDITAR',
+                entidad='Usuario',
+                detalle=f'ID: {usuario.id_usuario}, Nombre: {usuario.nombre}'
+            )
             action = 'actualizado'
         else:
             # Crear nuevo usuario
@@ -736,6 +820,13 @@ def guardar_usuario(request):
             )
             usuario.set_password(password)
             usuario.save()
+            # Auditoría
+            Auditoria.objects.create(
+                usuario=user,
+                accion='CREAR',
+                entidad='Usuario',
+                detalle=f'ID: {usuario.id_usuario}, Nombre: {usuario.nombre}'
+            )
             action = 'creado'
         
         return JsonResponse({
@@ -780,7 +871,13 @@ def eliminar_usuario(request, usuario_id):
         
         nombre = usuario.nombre
         usuario.delete()
-        
+        # Auditoría
+        Auditoria.objects.create(
+            usuario=user,
+            accion='BORRAR',
+            entidad='Usuario',
+            detalle=f'ID: {usuario_id}, Nombre: {nombre}'
+        )
         return JsonResponse({
             'success': True,
             'message': f'Usuario "{nombre}" eliminado correctamente'

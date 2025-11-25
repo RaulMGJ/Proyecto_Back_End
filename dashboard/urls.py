@@ -22,9 +22,11 @@ urlpatterns = [
     path('productos/agregar/', login_required(views.agregar_producto), name='agregar_producto'),
     path('productos/editar/<int:producto_id>/', login_required(views.editar_producto), name='editar_producto'),
     path('productos/exportar-excel/', login_required(views.exportar_productos_excel), name='exportar_productos_excel'),
+    path('productos/eliminar/<int:producto_id>/', login_required(views.eliminar_producto), name='eliminar_producto'),
     path('inventarios/', login_required(views.inventarios_view), name='inventarios'),
     path('inventarios/agregar/', login_required(views.agregar_inventario), name='agregar_inventario'),
     path('inventarios/editar/<int:inventario_id>/', login_required(views.editar_inventario), name='editar_inventario'),
+    path('inventarios/eliminar/<int:inventario_id>/', login_required(views.eliminar_inventario), name='eliminar_inventario'),
     path('proveedores/', login_required(views.proveedores_view), name='proveedores'),
     path('ventas/', login_required(views.ventas_view), name='ventas'),
 ]

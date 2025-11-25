@@ -176,3 +176,8 @@ EMAIL_USE_SSL = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='tu-email@gmail.com')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='tu-app-password')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# Seguridad de cookies de sesión
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = True  # Solo si usas HTTPS en producción
+SESSION_COOKIE_SAMESITE = 'Lax'  # O 'Strict' para máxima seguridad
