@@ -124,7 +124,15 @@
     <script>
         // Mostrar alertas de seguridad según el error
         document.addEventListener('DOMContentLoaded', function() {
-            {% if error_type == 'locked' %}
+            {% if error_type == 'empty_fields' %}
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Campos Requeridos',
+                    text: 'Por favor, ingresa tu usuario y contraseña para continuar.',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#4F81F7'
+                });
+            {% elif error_type == 'locked' %}
                 Swal.fire({
                     icon: 'error',
                     title: '🔒 Cuenta Bloqueada',

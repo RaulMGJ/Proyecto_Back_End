@@ -76,8 +76,16 @@ def login_view(request):
         return redirect('dashboard:home')
     
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '').strip()
+        
+        # F-LOGIN-05: Validar campos obligatorios antes de procesar
+        if not username or not password:
+            context = {
+                'error_type': 'empty_fields',
+                'username': username
+            }
+            return render(request, 'dashboard/new_login.html', context)
         
         # Verificar si el usuario existe
         try:
