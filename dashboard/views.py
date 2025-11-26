@@ -577,16 +577,16 @@ def forgot_password_view(request):
                 return render(request, 'dashboard/forgot_password.html')
             
         except Usuario.DoesNotExist:
-            # Por seguridad, no revelamos que el email no existe
+            # F-REC-02: Mostrar mensaje genérico sin indicar si el correo existe o no
             print(f"⚠️ Intento de recuperación para email no registrado: {email}")
             
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
                     'success': True,
-                    'message': 'Si el email existe, recibirás instrucciones para recuperar tu contraseña'
+                    'message': 'Si el email existe en nuestro sistema, recibirás un correo con instrucciones para recuperar tu contraseña. Por favor revisa tu bandeja de entrada y spam.'
                 })
             
-            messages.info(request, 'Si el email existe, recibirás instrucciones para recuperar tu contraseña')
+            messages.info(request, 'Si el email existe en nuestro sistema, recibirás un correo con instrucciones.')
             return redirect('dashboard:login')
             
         except Exception as e:
