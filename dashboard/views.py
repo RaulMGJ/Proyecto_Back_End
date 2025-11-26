@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
+from django.views.decorators.cache import never_cache
 from django.core.exceptions import PermissionDenied
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
@@ -142,11 +143,24 @@ def login_view(request):
     return render(request, 'dashboard/new_login.html')
 
 def logout_view(request):
-    """Vista de logout"""
-    logout(request)
-    return redirect('dashboard:login')
+    """Vista de logout con protección anti-caché (F-LOGIN-06)"""
+    # Destruir sesión completamente
+    if request.user.is_authenticated:
+        logout(request)
+    
+    # Limpiar cookies de sesión
+    request.session.flush()
+    
+    # Crear respuesta con headers anti-caché
+    response = redirect('login')
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    
+    return response
 
 @login_required
+@never_cache
 def home(request):
     """Dashboard principal"""
     user = request.user
@@ -171,6 +185,7 @@ def home(request):
     return render(request, 'dashboard/home.html', context)
 
 @login_required
+@never_cache
 def productos_view(request):
     """Vista para listar todos los productos con búsqueda, paginación y ordenamiento"""
     user = request.user
@@ -238,6 +253,7 @@ def productos_view(request):
     return render(request, 'dashboard/productos.html', context)
 
 @login_required
+@never_cache
 def inventarios_view(request):
     """Vista de inventarios"""
     user = request.user
@@ -284,6 +300,7 @@ def inventarios_view(request):
     return render(request, 'dashboard/inventarios.html', context)
 
 @login_required
+@never_cache
 def proveedores_view(request):
     """Vista ficticia de proveedores"""
     user = request.user
@@ -322,6 +339,7 @@ def proveedores_view(request):
     return render(request, 'dashboard/proveedores.html', context)
 
 @login_required
+@never_cache
 def ventas_view(request):
     """Vista ficticia de ventas"""
     user = request.user
@@ -646,6 +664,7 @@ def reset_password_view(request):
 
 
 @login_required
+@never_cache
 def usuarios_view(request):
     """Vista de gestión de usuarios"""
     user = request.user
