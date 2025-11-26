@@ -108,6 +108,13 @@ python manage.py runserver
 | **Bodeguero** | `bodeguero1` | `bodega123` | Gestión productos e inventarios |
 | **Consulta** | `cliente2` | `Contraseña,1` | Bloqueado del admin |
 
+## 👤 Usuario de prueba (Rol Consulta)
+
+- URL de ingreso: http://127.0.0.1:8000/login/
+- Usuario: `consultatest`
+- Contraseña: `Consulta123!`
+- Alcance: Rol Consulta (solo lectura). No tiene acceso a `/admin/`.
+
 ## 🏗️ **Estructura del Proyecto**
 
 ```
