@@ -70,6 +70,7 @@ from usuarios.models import Usuario, PasswordResetToken
 from .forms import ProductoForm, InventarioForm
 from .models import Auditoria
 
+@never_cache
 def login_view(request):
     """Vista de login personalizada con protección anti-fuerza bruta"""
     # Si el usuario ya está autenticado, redirigir al dashboard
