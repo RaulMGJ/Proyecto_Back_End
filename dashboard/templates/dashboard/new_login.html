@@ -125,6 +125,16 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
+        // F-LOGIN-06: Prevenir volver a páginas autenticadas desde login
+        window.history.forward();
+        function noBack() {
+            window.history.forward();
+        }
+        noBack();
+        window.onload = noBack;
+        window.onpageshow = function(evt) { if (evt.persisted) noBack(); }
+        window.onunload = function() { void(0); }
+        
         // Mostrar alertas de seguridad según el error
         document.addEventListener('DOMContentLoaded', function() {
             {% if error_type == 'empty_fields' %}

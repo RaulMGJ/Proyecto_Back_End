@@ -152,11 +152,14 @@ def logout_view(request):
     # Limpiar cookies de sesión
     request.session.flush()
     
-    # Crear respuesta con headers anti-caché
+    # Crear respuesta con headers anti-caché y JavaScript para limpiar historial
     response = redirect('login')
     response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
     response['Pragma'] = 'no-cache'
     response['Expires'] = '0'
+    
+    # Agregar header para prevenir navegación hacia atrás
+    response['Clear-Site-Data'] = '"cache", "cookies", "storage"'
     
     return response
 
