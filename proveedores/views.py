@@ -7,22 +7,15 @@ from .models import Proveedor
 from django import forms
 
 class ProveedorForm(forms.ModelForm):
-    # Campos adicionales que no están en el modelo pero necesitamos en el formulario
-    rut = forms.CharField(max_length=20, required=False, widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': '76.542.210-5'}))
-    razon_social = forms.CharField(max_length=200, required=False, widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Proveedor S.A.'}))
-    nombre_fantasia = forms.CharField(max_length=200, required=False, widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Proveedores'}))
-    email = forms.EmailField(required=False, widget=forms.EmailInput(attrs={'class': 'form-input', 'placeholder': 'contacto@proveedor.cl'}))
-    telefono = forms.CharField(max_length=20, required=False, widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': '+56 9 2345 6789'}))
-    sitio_web = forms.URLField(required=False, widget=forms.URLInput(attrs={'class': 'form-input', 'placeholder': 'https://proveedor.cl'}))
-    estado = forms.ChoiceField(
-        choices=[('ACTIVO', 'ACTIVO'), ('BLOQUEADO', 'BLOQUEADO')],
-        initial='ACTIVO',
-        widget=forms.Select(attrs={'class': 'form-select'})
+    rut_nif = forms.CharField(
+        max_length=12,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': '12345678-5'})
     )
-    
+
     class Meta:
         model = Proveedor
-        fields = ['nombre', 'contacto', 'direccion']
+        fields = ['rut_nif', 'nombre', 'contacto', 'direccion']
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Nombre del proveedor'}),
             'contacto': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Persona de contacto'}),
@@ -80,8 +73,8 @@ def agregar_proveedor(request):
                         'nombre': proveedor.nombre,
                         'contacto': proveedor.contacto or '',
                         'direccion': proveedor.direccion or '',
-                        'rut': form.cleaned_data.get('rut', ''),
-                        'estado': form.cleaned_data.get('estado', 'ACTIVO')
+                        'rut_nif': form.cleaned_data.get('rut_nif', ''),
+                        'estado': 'ACTIVO'
                     }
                 })
             

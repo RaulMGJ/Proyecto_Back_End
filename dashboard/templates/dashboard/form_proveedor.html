@@ -291,8 +291,8 @@
                             <h6 class="mb-3 fw-bold">Identificación legal y contacto</h6>
                             
                             <div class="form-field">
-                                <label class="form-label">RUT <span class="text-muted">(opcional, pyme)</span></label>
-                                <input type="text" class="form-input" name="rut" placeholder="76.542.210-5">
+                                <label class="form-label">RUT <span class="text-danger">*</span></label>
+                                <input type="text" class="form-input" name="rut_nif" placeholder="12345678-5" required>
                             </div>
 
                             <div class="form-field">
@@ -501,7 +501,7 @@
                     <table class="table table-sm mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>RUT/NIF</th>
+                                <th>RUT</th>
                                 <th>Razón Social</th>
                                 <th>Estado</th>
                                 <th>Acciones</th>
@@ -510,7 +510,7 @@
                         <tbody id="proveedoresList">
                             {% for proveedor in proveedores %}
                             <tr data-proveedor-id="{{ proveedor.id_proveedor }}">
-                                <td class="small">{{ proveedor.rut|default:"76.542.210-5" }}</td>
+                                <td class="small">{{ proveedor.rut_nif|default:"12345678-5" }}</td>
                                 <td class="small fw-bold">{{ proveedor.nombre }}</td>
                                 <td class="small text-center">
                                     <span class="proveedor-estado estado-activo">ACTIVO</span>
@@ -583,7 +583,7 @@
         row.setAttribute('data-proveedor-id', proveedorData.id);
         
         row.innerHTML = `
-            <td class="small">${proveedorData.rut || '76.542.210-5'}</td>
+            <td class="small">${proveedorData.rut_nif || '12345678-5'}</td>
             <td class="small fw-bold">${proveedorData.nombre}</td>
             <td class="small text-center">
                 <span class="proveedor-estado estado-activo">${proveedorData.estado || 'ACTIVO'}</span>
@@ -689,7 +689,7 @@
     
     document.addEventListener('DOMContentLoaded', function() {
         // Auto-focus en el primer campo
-        const firstInput = document.querySelector('input[name="rut"]');
+        const firstInput = document.querySelector('input[name="rut_nif"]');
         if (firstInput) {
             firstInput.focus();
         }
