@@ -94,8 +94,8 @@ python manage.py runserver
 1. **Abrir navegador:** http://127.0.0.1:8000/admin/
 
 2. **Usar credenciales del administrador:**
-   - **Usuario:** `admin`
-   - **Contraseña:** `admin123`
+   - **Usuario/Correo:** `cristobalvalenzuelachavez@gmail.com`
+   - **Contraseña:** `Admin,123456`
 
 ## 👥 **Usuarios Disponibles**
 
@@ -103,7 +103,7 @@ python manage.py runserver
 
 | Rol | Usuario | Contraseña | Permisos |
 |-----|---------|------------|----------|
-| **Administrador** | `admin` | `admin123` | Acceso completo a todo |
+| **Administrador** | `cristobalvalenzuelachavez@gmail.com` | `Admin,123456` | Acceso completo a todo |
 | **Vendedor** | `vendedor1` | `vendedor123` | Solo lectura productos/inventarios |
 | **Bodeguero** | `bodeguero1` | `bodega123` | Gestión productos e inventarios |
 | **Consulta** | `cliente2` | `Contraseña,1` | Bloqueado del admin |
@@ -228,7 +228,7 @@ FLUSH PRIVILEGES;
 - **Base de datos**: `dulceria_db`
 
 ### **👤 Usuarios de Prueba:**
-- **admin** / admin123 (Administrador completo)
+- **cristobalvalenzuelachavez@gmail.com** / Admin,123456 (Administrador completo)
 - **vendedor1** / vendedor123 (Solo lectura)
 - **bodeguero1** / bodega123 (Gestión inventarios)
 - **cliente2** / Contraseña,1 (Bloqueado)
@@ -250,3 +250,13 @@ FLUSH PRIVILEGES;
 - Timezone configurado para Colombia
 
 ¡Tu sistema está listo para usar con phpMyAdmin! 🎉
+
+## 🔔 Actualización: Admin y Recuperación de Contraseña
+
+- Admin (credenciales actuales):
+   - Usuario/Correo: `cristobalvalenzuelachavez@gmail.com`
+   - Contraseña: `Admin,123456`
+
+- Tokens de recuperación de contraseña:
+   - Expiran en 5 minutos.
+   - Son de un solo uso. Si ya se usó o expiró, solicita uno nuevo desde "Olvidé mi contraseña".
