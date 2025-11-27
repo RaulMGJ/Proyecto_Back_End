@@ -552,21 +552,22 @@
 <script>
     // Inventory Management Functions
     function quickEntry(inventoryId) {
+        const modalEl = document.getElementById('movementModal');
         document.getElementById('movementType').value = 'entrada';
         document.getElementById('movementModalTitle').textContent = 'Entrada de Inventario';
         document.getElementById('providerField').style.display = 'block';
-        
-        const modal = new bootstrap.Modal(document.getElementById('movementModal'));
-        modal.show();
+        // Solo mostrar si no fue invocado por data-bs-toggle
+        const inst = bootstrap.Modal.getInstance(modalEl) || bootstrap.Modal.getOrCreateInstance(modalEl);
+        if (!inst._isShown) { inst.show(); }
     }
     
     function quickExit(inventoryId) {
+        const modalEl = document.getElementById('movementModal');
         document.getElementById('movementType').value = 'salida';
         document.getElementById('movementModalTitle').textContent = 'Salida de Inventario';
         document.getElementById('providerField').style.display = 'none';
-        
-        const modal = new bootstrap.Modal(document.getElementById('movementModal'));
-        modal.show();
+        const inst = bootstrap.Modal.getInstance(modalEl) || bootstrap.Modal.getOrCreateInstance(modalEl);
+        if (!inst._isShown) { inst.show(); }
     }
     
     function viewInventoryDetails(inventoryId) {
@@ -658,14 +659,31 @@
         if (movementModal) {
             movementModal.addEventListener('show.bs.modal', function(event) {
                 const button = event.relatedTarget;
-                if (button) {
-                    const type = button.getAttribute('data-type');
-                    if (type === 'entrada') {
-                        quickEntry();
-                    } else if (type === 'salida') {
-                        quickExit();
-                    }
+                const type = button ? button.getAttribute('data-type') : document.getElementById('movementType').value;
+                if (type === 'entrada') {
+                    document.getElementById('movementType').value = 'entrada';
+                    document.getElementById('movementModalTitle').textContent = 'Entrada de Inventario';
+                    document.getElementById('providerField').style.display = 'block';
+                } else if (type === 'salida') {
+                    document.getElementById('movementType').value = 'salida';
+                    document.getElementById('movementModalTitle').textContent = 'Salida de Inventario';
+                    document.getElementById('providerField').style.display = 'none';
+                } else {
+                    // Estado por defecto
+                    document.getElementById('movementModalTitle').textContent = 'Movimiento de Inventario';
                 }
+            });
+        }
+
+        // Asegurar limpieza completa de backdrop al cerrar
+        if (movementModal) {
+            movementModal.addEventListener('hidden.bs.modal', function() {
+                document.getElementById('movementForm').reset();
+                document.getElementById('providerField').style.display = 'none';
+                // Eliminar posibles backdrops duplicados
+                document.querySelectorAll('.modal-backdrop').forEach((bd, idx) => { if (idx > 0) bd.remove(); });
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('padding-right');
             });
         }
         
