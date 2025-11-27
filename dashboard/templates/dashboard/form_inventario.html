@@ -147,13 +147,13 @@
                         
                         <!-- Producto -->
                         <div class="mb-4">
-                            <label for="{{ form.producto.id_for_label }}" class="lilis-form-label required-field">
+                            <label for="{{ form.id_producto.id_for_label }}" class="lilis-form-label required-field">
                                 Producto
                             </label>
-                            {{ form.producto }}
-                            {% if form.producto.errors %}
+                            {{ form.id_producto }}
+                            {% if form.id_producto.errors %}
                                 <div class="invalid-feedback d-block">
-                                    {{ form.producto.errors.0 }}
+                                    {{ form.id_producto.errors.0 }}
                                 </div>
                             {% endif %}
                             <div class="field-help">
@@ -164,21 +164,21 @@
 
                         <!-- Stock Actual -->
                         <div class="mb-4">
-                            <label for="{{ form.stock_actual.id_for_label }}" class="lilis-form-label required-field">
-                                Stock Actual
+                            <label for="{{ form.cantidad_actual.id_for_label }}" class="lilis-form-label required-field">
+                                Cantidad Actual
                             </label>
                             <div class="quantity-controls">
-                                <button type="button" class="quantity-btn" onclick="decreaseQuantity('{{ form.stock_actual.id_for_label }}')">
+                                <button type="button" class="quantity-btn" onclick="decreaseQuantity('{{ form.cantidad_actual.id_for_label }}')">
                                     <i class="bi bi-dash"></i>
                                 </button>
-                                {{ form.stock_actual }}
-                                <button type="button" class="quantity-btn" onclick="increaseQuantity('{{ form.stock_actual.id_for_label }}')">
+                                {{ form.cantidad_actual }}
+                                <button type="button" class="quantity-btn" onclick="increaseQuantity('{{ form.cantidad_actual.id_for_label }}')">
                                     <i class="bi bi-plus"></i>
                                 </button>
                             </div>
-                            {% if form.stock_actual.errors %}
+                            {% if form.cantidad_actual.errors %}
                                 <div class="invalid-feedback d-block">
-                                    {{ form.stock_actual.errors.0 }}
+                                    {{ form.cantidad_actual.errors.0 }}
                                 </div>
                             {% endif %}
                             <div class="field-help">
@@ -200,7 +200,24 @@
                             {% endif %}
                             <div class="field-help">
                                 <i class="bi bi-info-circle me-1"></i>
-                                Cantidad mínima antes de requerir reabastecimiento
+                                Cantidad mínima antes de requerir reabastecimiento (F-PROD-VAL-05)
+                            </div>
+                        </div>
+
+                        <!-- Stock Máximo -->
+                        <div class="mb-4">
+                            <label for="{{ form.stock_maximo.id_for_label }}" class="lilis-form-label">
+                                Stock Máximo
+                            </label>
+                            {{ form.stock_maximo }}
+                            {% if form.stock_maximo.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.stock_maximo.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="field-help">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Cantidad máxima permitida (opcional)
                             </div>
                         </div>
 

@@ -382,252 +382,57 @@
                         {% endfor %}
                     {% endif %}
 
-                    <!-- Pasos del formulario -->
-                    <div class="form-steps">
-                        <div class="step active" id="step1" data-action="showStep" data-step="1">
-                            <i class="bi bi-1-circle-fill d-block mb-2" style="font-size: 1.5rem;"></i>
-                            Información Básica
-                        </div>
-                        <div class="step" id="step2" data-action="showStep" data-step="2">
-                            <i class="bi bi-2-circle-fill d-block mb-2" style="font-size: 1.5rem;"></i>
-                            Precios y Stock
-                        </div>
-                        <div class="step" id="step3" data-action="showStep" data-step="3">
-                            <i class="bi bi-3-circle-fill d-block mb-2" style="font-size: 1.5rem;"></i>
-                            Detalles Adicionales
-                        </div>
-                    </div>
-
                     <form method="post" id="productForm">
                         {% csrf_token %}
                         
-                        <!-- Paso 1: Información Básica -->
-                        <div class="step-content active" id="content-step1">
-                            <h6 class="section-title">
-                                <i class="bi bi-info-circle me-2"></i>Identificación del Producto
-                            </h6>
-                            
-                            <div class="form-field">
-                                <label class="form-label">
-                                    <i class="bi bi-tag me-1"></i>Nombre del Producto 
-                                    <span class="text-danger">*</span>
-                                </label>
-                                {{ form.nombre }}
-                                {% if form.nombre.errors %}
-                                    <div class="text-danger small mt-1">{{ form.nombre.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-
-                            <div class="form-field">
-                                <label class="form-label">
-                                    <i class="bi bi-file-text me-1"></i>Descripción
-                                </label>
-                                {{ form.descripcion }}
-                                {% if form.descripcion.errors %}
-                                    <div class="text-danger small mt-1">{{ form.descripcion.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-field">
-                                        <label class="form-label">
-                                            <i class="bi bi-upc me-1"></i>SKU <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="text" class="form-input" name="sku" placeholder="SKU-001" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-field">
-                                        <label class="form-label">
-                                            <i class="bi bi-grid me-1"></i>Categoría <span class="text-danger">*</span>
-                                        </label>
-                                        <select class="form-select" name="categoria" required>
-                                            <option value="">Seleccione...</option>
-                                            <option value="Dulces">🍬 Dulces</option>
-                                            <option value="Chocolates">🍫 Chocolates</option>
-                                            <option value="Bebidas">🥤 Bebidas</option>
-                                            <option value="Snacks">🍿 Snacks</option>
-                                            <option value="Galletas">🍪 Galletas</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-field">
-                                <label class="form-label">
-                                    <i class="bi bi-building me-1"></i>Marca <span class="text-muted">(opcional)</span>
-                                </label>
-                                <input type="text" class="form-input" name="marca" placeholder="Marca del producto">
-                            </div>
+                        <h6 class="section-title mb-4">
+                            <i class="bi bi-info-circle me-2"></i>Información del Producto
+                        </h6>
+                        
+                        <div class="form-field">
+                            <label class="form-label">
+                                <i class="bi bi-tag me-1"></i>{{ form.nombre.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.nombre }}
+                            {% if form.nombre.errors %}
+                                <div class="text-danger small mt-1">{{ form.nombre.errors.0 }}</div>
+                            {% endif %}
                         </div>
 
-                        <!-- Paso 2: Precios y Stock -->
-                        <div class="step-content" id="content-step2">
-                            <h6 class="section-title">
-                                <i class="bi bi-cash-stack me-2"></i>Precios y Control de Stock
-                            </h6>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-field">
-                                        <label class="form-label">
-                                            <i class="bi bi-currency-dollar me-1"></i>Precio de Venta 
-                                            <span class="text-danger">*</span>
-                                        </label>
-                                        {{ form.precio_referencia }}
-                                        {% if form.precio_referencia.errors %}
-                                            <div class="text-danger small mt-1">{{ form.precio_referencia.errors.0 }}</div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-field">
-                                        <label class="form-label">
-                                            <i class="bi bi-receipt me-1"></i>Costo Unitario <span class="text-muted">(opcional)</span>
-                                        </label>
-                                        <input type="number" class="form-input" name="costo_unitario" placeholder="0.00" step="0.01">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-field">
-                                        <label class="form-label">
-                                            <i class="bi bi-dash-circle me-1"></i>Stock Mínimo <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="number" class="form-input" name="stock_minimo" placeholder="0" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-field">
-                                        <label class="form-label">
-                                            <i class="bi bi-plus-circle me-1"></i>Stock Máximo
-                                        </label>
-                                        <input type="number" class="form-input" name="stock_maximo" placeholder="0">
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-field">
-                                        <label class="form-label">
-                                            <i class="bi bi-arrow-repeat me-1"></i>Punto Reorden
-                                        </label>
-                                        <input type="number" class="form-input" name="punto_reorden" placeholder="0">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-field">
-                                        <label class="form-label">
-                                            <i class="bi bi-box2 me-1"></i>Unidad de Compra <span class="text-danger">*</span>
-                                        </label>
-                                        <select class="form-select" name="unidad_compra" required>
-                                            <option value="">Seleccione...</option>
-                                            <option value="Unidad">Unidad</option>
-                                            <option value="Caja">Caja</option>
-                                            <option value="Paquete">Paquete</option>
-                                            <option value="Docena">Docena</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-field">
-                                        <label class="form-label">
-                                            <i class="bi bi-box2-heart me-1"></i>Unidad de Venta <span class="text-danger">*</span>
-                                        </label>
-                                        <select class="form-select" name="unidad_venta" required>
-                                            <option value="">Seleccione...</option>
-                                            <option value="Unidad">Unidad</option>
-                                            <option value="Caja">Caja</option>
-                                            <option value="Paquete">Paquete</option>
-                                            <option value="Docena">Docena</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="form-field">
-                                        <label class="form-label">
-                                            <i class="bi bi-calculator me-1"></i>Factor de Conversión
-                                        </label>
-                                        <input type="number" class="form-input" name="factor_conversion" placeholder="1" value="1">
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="form-field">
+                            <label class="form-label">
+                                <i class="bi bi-file-text me-1"></i>{{ form.descripcion.label }}
+                            </label>
+                            {{ form.descripcion }}
+                            {% if form.descripcion.errors %}
+                                <div class="text-danger small mt-1">{{ form.descripcion.errors.0 }}</div>
+                            {% endif %}
                         </div>
 
-                        <!-- Paso 3: Detalles Adicionales -->
-                        <div class="step-content" id="content-step3">
-                            <h6 class="section-title">
-                                <i class="bi bi-sliders me-2"></i>Configuración Avanzada
-                            </h6>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-field">
-                                        <label class="form-label">
-                                            <i class="bi bi-image me-1"></i>URL de Imagen <span class="text-muted">(opcional)</span>
-                                        </label>
-                                        <input type="url" class="form-input" name="imagen_url" placeholder="https://...imagen.jpg">
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-field">
-                                        <label class="form-label">
-                                            <i class="bi bi-file-pdf me-1"></i>Ficha Técnica <span class="text-muted">(opcional)</span>
-                                        </label>
-                                        <input type="url" class="form-input" name="ficha_tecnica_url" placeholder="https://...ficha.pdf">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-field">
-                                <label class="form-label mb-3">
-                                    <i class="bi bi-gear me-1"></i>Opciones de Control
-                                </label>
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input type="checkbox" class="form-check-input" name="perecedero" id="perecedero">
-                                            <label class="form-check-label" for="perecedero">
-                                                <i class="bi bi-clock-history me-1"></i>Perecedero
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input type="checkbox" class="form-check-input" name="control_por_lote" id="control_por_lote">
-                                            <label class="form-check-label" for="control_por_lote">
-                                                <i class="bi bi-boxes me-1"></i>Control por Lote
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input type="checkbox" class="form-check-input" name="control_por_serie" id="control_por_serie">
-                                            <label class="form-check-label" for="control_por_serie">
-                                                <i class="bi bi-hash me-1"></i>Control por Serie
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-field mt-4">
-                                <label class="form-label">
-                                    <i class="bi bi-toggle-on me-1"></i>Estado del Producto
-                                </label>
-                                <div class="form-check form-switch" style="font-size: 1.1rem;">
-                                    {{ form.activo }}
-                                    <label class="form-check-label ms-2" for="{{ form.activo.id_for_label }}">
-                                        <strong>Producto Activo</strong>
-                                        <small class="d-block text-muted">Los productos inactivos no aparecerán en ventas</small>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-field">
+                                    <label class="form-label">
+                                        <i class="bi bi-currency-dollar me-1"></i>{{ form.precio_referencia.label }}
+                                        <span class="text-danger">*</span>
                                     </label>
+                                    {{ form.precio_referencia }}
+                                    {% if form.precio_referencia.errors %}
+                                        <div class="text-danger small mt-1">{{ form.precio_referencia.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-field">
+                                    <label class="form-label">
+                                        <i class="bi bi-rulers me-1"></i>{{ form.unidad_medida.label }}
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.unidad_medida }}
+                                    {% if form.unidad_medida.errors %}
+                                        <div class="text-danger small mt-1">{{ form.unidad_medida.errors.0 }}</div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -639,29 +444,14 @@
                             </div>
                         {% endif %}
 
-                        <!-- Botones de navegación por pasos -->
-                        <div class="d-flex justify-content-between gap-3 mt-4">
-                            <!-- Botón Anterior (solo pasos 2 y 3) -->
-                            <button type="button" class="btn-secondary" id="btnPrevious" style="display: none;" onclick="previousStep()">
-                                <i class="bi bi-arrow-left me-2"></i>Anterior
+                        <!-- Botones de acción -->
+                        <div class="d-flex justify-content-end gap-3 mt-4">
+                            <a href="{% url 'dashboard:productos' %}" class="btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Guardar Producto
                             </button>
-                            
-                            <div class="ms-auto d-flex gap-3">
-                                <!-- Botón Limpiar -->
-                                <button type="button" class="btn-secondary" data-action="clearForm">
-                                    <i class="bi bi-x-circle me-2"></i>Limpiar
-                                </button>
-                                
-                                <!-- Botón Siguiente (pasos 1 y 2) -->
-                                <button type="button" class="btn-primary" id="btnNext" onclick="nextStep()">
-                                    Siguiente<i class="bi bi-arrow-right ms-2"></i>
-                                </button>
-                                
-                                <!-- Botón Guardar (solo paso 3) -->
-                                <button type="submit" class="btn-primary" id="btnSubmit" style="display: none;">
-                                    <i class="bi bi-check-circle me-2"></i>Guardar Producto
-                                </button>
-                            </div>
                         </div>
                     </form>
                 </div>
@@ -743,217 +533,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    let currentStep = 1;
-    const totalSteps = 3;
-
-    // Función para mostrar paso específico
-    function showStep(step) {
-        // Actualizar contenido de pasos
-        document.querySelectorAll('.step-content').forEach(content => {
-            content.classList.remove('active');
-        });
-        const targetStep = document.getElementById('content-step' + step);
-        if (targetStep) {
-            targetStep.classList.add('active');
-        }
-
-        // Actualizar indicadores de paso
-        document.querySelectorAll('.step').forEach((stepEl, index) => {
-            stepEl.classList.remove('active', 'completed');
-            if (index + 1 < step) {
-                stepEl.classList.add('completed');
-            } else if (index + 1 === step) {
-                stepEl.classList.add('active');
-            }
-        });
-
-        currentStep = step;
-        updateNavigationButtons();
-    }
-
-    // Actualizar visibilidad de botones según el paso
-    function updateNavigationButtons() {
-        const btnPrevious = document.getElementById('btnPrevious');
-        const btnNext = document.getElementById('btnNext');
-        const btnSubmit = document.getElementById('btnSubmit');
-
-        // Botón Anterior: visible en pasos 2 y 3
-        if (currentStep > 1) {
-            btnPrevious.style.display = 'block';
-        } else {
-            btnPrevious.style.display = 'none';
-        }
-
-        // Botón Siguiente: visible en pasos 1 y 2
-        if (currentStep < totalSteps) {
-            btnNext.style.display = 'block';
-            btnSubmit.style.display = 'none';
-        } else {
-            // Paso 3: mostrar Guardar
-            btnNext.style.display = 'none';
-            btnSubmit.style.display = 'block';
-        }
-    }
-
-    // Validar paso actual antes de avanzar
-    function validateCurrentStep() {
-        if (currentStep === 1) {
-            // Validar Paso 1: Información Básica
-            const nombre = document.querySelector('[name="nombre"]');
-            const sku = document.querySelector('[name="sku"]');
-            const categoria = document.querySelector('[name="categoria"]');
-
-            if (!nombre || !nombre.value.trim()) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Campo obligatorio',
-                    text: 'Por favor ingresa el nombre del producto',
-                    confirmButtonColor: '#dc2626'
-                });
-                if (nombre) nombre.focus();
-                return false;
-            }
-
-            if (!sku || !sku.value.trim()) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Campo obligatorio',
-                    text: 'Por favor ingresa el SKU del producto',
-                    confirmButtonColor: '#dc2626'
-                });
-                if (sku) sku.focus();
-                return false;
-            }
-
-            if (!categoria || !categoria.value) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Campo obligatorio',
-                    text: 'Por favor selecciona una categoría',
-                    confirmButtonColor: '#dc2626'
-                });
-                if (categoria) categoria.focus();
-                return false;
-            }
-
-            return true;
-        }
-
-        if (currentStep === 2) {
-            // Validar Paso 2: Precios y Stock
-            const precio = document.querySelector('[name="precio_referencia"]');
-            const unidadCompra = document.querySelector('[name="unidad_compra"]');
-            const unidadVenta = document.querySelector('[name="unidad_venta"]');
-            const stockMinimo = document.querySelector('[name="stock_minimo"]');
-
-            if (!precio || !precio.value || parseFloat(precio.value) <= 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Campo obligatorio',
-                    text: 'Por favor ingresa un precio válido',
-                    confirmButtonColor: '#dc2626'
-                });
-                if (precio) precio.focus();
-                return false;
-            }
-
-            if (!unidadCompra || !unidadCompra.value) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Campo obligatorio',
-                    text: 'Por favor selecciona la unidad de compra',
-                    confirmButtonColor: '#dc2626'
-                });
-                if (unidadCompra) unidadCompra.focus();
-                return false;
-            }
-
-            if (!unidadVenta || !unidadVenta.value) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Campo obligatorio',
-                    text: 'Por favor selecciona la unidad de venta',
-                    confirmButtonColor: '#dc2626'
-                });
-                if (unidadVenta) unidadVenta.focus();
-                return false;
-            }
-
-            if (!stockMinimo || stockMinimo.value === '') {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Campo obligatorio',
-                    text: 'Por favor ingresa el stock mínimo',
-                    confirmButtonColor: '#dc2626'
-                });
-                if (stockMinimo) stockMinimo.focus();
-                return false;
-            }
-
-            return true;
-        }
-
-        // Paso 3: Sin validaciones obligatorias (opcionales)
-        return true;
-    }
-
-    // Ir al siguiente paso
-    function nextStep() {
-        if (validateCurrentStep()) {
-            if (currentStep < totalSteps) {
-                showStep(currentStep + 1);
-            }
-        }
-    }
-
-    // Ir al paso anterior
-    function previousStep() {
-        if (currentStep > 1) {
-            showStep(currentStep - 1);
-        }
-    }
-
     document.addEventListener('DOMContentLoaded', function() {
-
-        // Event listeners para los pasos (permitir click solo en pasos completados)
-        document.querySelectorAll('[data-action="showStep"]').forEach(step => {
-            step.addEventListener('click', function() {
-                const stepNumber = parseInt(this.dataset.step);
-                // Permitir navegar solo a pasos anteriores o actual
-                if (stepNumber <= currentStep) {
-                    showStep(stepNumber);
-                }
-            });
-        });
-
-        // Limpiar formulario
-        const clearBtn = document.querySelector('[data-action="clearForm"]');
-        if (clearBtn) {
-            clearBtn.addEventListener('click', function() {
-                Swal.fire({
-                    title: '¿Limpiar formulario?',
-                    text: 'Se perderán todos los datos ingresados',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#dc2626',
-                    cancelButtonColor: '#6b7280',
-                    confirmButtonText: 'Sí, limpiar',
-                    cancelButtonText: 'Cancelar'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        document.getElementById('productForm').reset();
-                        showStep(1);
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Formulario limpiado',
-                            showConfirmButton: false,
-                            timer: 1500
-                        });
-                    }
-                });
-            });
-        }
-
         // Búsqueda de productos
         const searchInput = document.querySelector('.search-input');
         if (searchInput) {
@@ -1009,19 +589,35 @@
                                 'Content-Type': 'application/json'
                             }
                         })
-                        .then(response => {
-                            if (response.ok) {
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
                                 if (productRow) productRow.remove();
                                 Swal.fire({
                                     icon: 'success',
                                     title: '¡Eliminado!',
-                                    text: 'Producto eliminado exitosamente',
+                                    text: data.message,
                                     confirmButtonColor: '#dc2626',
                                     timer: 2000
                                 });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: data.message,
+                                    confirmButtonColor: '#dc2626'
+                                });
                             }
                         })
-                        .catch(error => console.error('Error:', error));
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'No se pudo eliminar el producto',
+                                confirmButtonColor: '#dc2626'
+                            });
+                        });
                     }
                 });
             });
@@ -1031,29 +627,9 @@
         const exportBtn = document.querySelector('.export-btn');
         if (exportBtn) {
             exportBtn.addEventListener('click', function() {
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Funcionalidad en desarrollo',
-                    text: 'La exportación de productos estará disponible próximamente',
-                    confirmButtonColor: '#dc2626'
-                });
+                window.location.href = '/productos/exportar-excel/';
             });
         }
-
-        // Validación final del formulario (al hacer submit)
-        const form = document.getElementById('productForm');
-        if (form) {
-            form.addEventListener('submit', function(event) {
-                // Validar todos los pasos antes de enviar
-                if (!validateCurrentStep()) {
-                    event.preventDefault();
-                    return false;
-                }
-            });
-        }
-        
-        // Inicializar botones
-        updateNavigationButtons();
 
         // Auto-cerrar alertas
         setTimeout(() => {
@@ -1077,7 +653,7 @@
             }, index * 50);
         });
 
-        console.log('Product form loaded successfully - 3 step wizard ready');
+        console.log('Product form loaded successfully');
     });
 </script>
 {% endblock %}
