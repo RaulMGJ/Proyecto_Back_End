@@ -354,17 +354,14 @@
                                 <input type="text" class="lilis-form-control" name="provincia">
                             </div>
                             <div class="col-md-4">
-                                <label class="lilis-form-label">Departamento *</label>
-                                <select class="lilis-form-control" name="departamento" required>
+                                <label class="lilis-form-label">País *</label>
+                                <select class="lilis-form-control" name="pais" required>
                                     <option value="">Seleccionar...</option>
-                                    <option value="Ventas">Ventas</option>
-                                    <option value="Compras">Compras</option>
-                                    <option value="Almacén">Almacén</option>
-                                    <option value="Administración">Administración</option>
-                                    <option value="Contabilidad">Contabilidad</option>
-                                    <option value="Logística">Logística</option>
-                                    <option value="Producción">Producción</option>
-                                    <option value="Atención al Cliente">Atención al Cliente</option>
+                                    <option value="Chile" selected>Chile</option>
+                                    <option value="Argentina">Argentina</option>
+                                    <option value="Perú">Perú</option>
+                                    <option value="Bolivia">Bolivia</option>
+                                    <option value="Uruguay">Uruguay</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -587,6 +584,19 @@
                     field.focus();
                     return false;
                 }
+            }
+
+            // Validación país requerido
+            if (fieldName === 'pais' && !value) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Campo obligatorio',
+                    text: 'Por favor selecciona un país',
+                    confirmButtonColor: '#4F81F7',
+                    confirmButtonText: 'Entendido'
+                });
+                field.focus();
+                return false;
             }
         }
         

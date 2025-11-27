@@ -23,11 +23,12 @@ class ProveedorForm(forms.ModelForm):
 
     class Meta:
         model = Proveedor
-        fields = ['rut_nif', 'nombre', 'contacto', 'direccion', 'email', 'email_secundario']
+        fields = ['rut_nif', 'nombre', 'contacto', 'direccion', 'pais', 'email', 'email_secundario']
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Nombre del proveedor'}),
             'contacto': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Persona de contacto'}),
             'direccion': forms.Textarea(attrs={'class': 'form-input', 'placeholder': 'Dirección completa', 'rows': 3}),
+            'pais': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Chile'}),
         }
 
 @login_required

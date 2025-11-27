@@ -356,8 +356,9 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-field">
-                                        <label class="form-label">País <span class="text-muted">(opcional si es de Chile)</span></label>
-                                        <select class="form-select" name="pais">
+                                        <label class="form-label">País <span class="text-danger">*</span></label>
+                                        <select class="form-select" name="pais" required>
+                                            <option value="">Seleccionar...</option>
                                             <option value="Chile" selected>Chile</option>
                                             <option value="Argentina">Argentina</option>
                                             <option value="Perú">Perú</option>

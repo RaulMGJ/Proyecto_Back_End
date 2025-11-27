@@ -39,6 +39,13 @@ class Proveedor(models.Model):
     nombre = models.CharField(max_length=150)
     contacto = models.CharField(max_length=200)
     direccion = models.CharField(max_length=200)
+    pais = models.CharField(
+        max_length=80,
+        verbose_name="País",
+        help_text="País del proveedor (obligatorio)",
+        blank=False,
+        default="Chile"
+    )
     rut_nif = models.CharField(
         max_length=12,
         unique=True,
