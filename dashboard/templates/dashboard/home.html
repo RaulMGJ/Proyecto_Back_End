@@ -78,6 +78,11 @@
                 <div class="fs-5 fw-bold">{{ now|time:"H:i" }}</div>
             </div>
         </div>
+            {% if user.id_rol %}
+            <span class="badge bg-light text-dark fw-semibold" style="letter-spacing:.2px">
+                Rol: {{ user.id_rol.nombre }}
+            </span>
+            {% endif %}
     </div>
     
     <!-- Stats Overview -->
