@@ -19,6 +19,9 @@ class Usuario(AbstractUser):
     # Campos de seguridad anti-fuerza bruta
     failed_login_attempts = models.IntegerField(default=0, verbose_name="Intentos fallidos de login")
     locked_until = models.DateTimeField(null=True, blank=True, verbose_name="Bloqueado hasta")
+
+    # Flag de seguridad: obliga cambio de contraseña en primer inicio
+    debe_cambiar_clave = models.BooleanField(default=False, verbose_name="Debe cambiar clave")
     
     # Campos adicionales para AbstractUser
     username = models.CharField(max_length=150, unique=True)

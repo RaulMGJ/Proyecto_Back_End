@@ -227,11 +227,11 @@
                                 <label for="email">Email <span class="text-danger">*</span></label>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6" id="passwordField" style="display:none;">
                             <div class="form-floating">
                                 <input type="password" class="form-control" id="password" name="password" placeholder="Contraseña" autocomplete="new-password" minlength="8">
-                                <label for="password">Contraseña <span class="text-danger" id="passwordRequired">*</span></label>
-                                <div class="form-text">Mínimo 8 caracteres, incluir mayúscula y número</div>
+                                <label for="password">Contraseña <span class="text-danger" id="passwordRequired" style="display:none;">*</span></label>
+                                <div class="form-text">Si ingresas una, será temporal y el usuario deberá cambiarla al ingresar.</div>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -393,8 +393,10 @@
         isEditMode = false;
         document.getElementById('userModalLabel').innerHTML = '<i class="bi bi-person-plus me-2"></i>Nuevo Usuario';
         document.getElementById('submitButtonText').textContent = 'Crear Usuario';
-        document.getElementById('passwordRequired').style.display = 'inline';
-        document.getElementById('password').required = true;
+        // En creación no se pide contraseña; si se agrega, será temporal
+        document.getElementById('passwordRequired').style.display = 'none';
+        document.getElementById('passwordField').style.display = 'none';
+        document.getElementById('password').required = false;
         document.getElementById('userForm').reset();
         document.getElementById('userId').value = '';
         document.getElementById('activo').value = '';
@@ -406,6 +408,7 @@
         document.getElementById('userModalLabel').innerHTML = '<i class="bi bi-pencil me-2"></i>Editar Usuario';
         document.getElementById('submitButtonText').textContent = 'Actualizar Usuario';
         document.getElementById('passwordRequired').style.display = 'none';
+        document.getElementById('passwordField').style.display = 'block';
         document.getElementById('password').required = false;
         
         // Cargar los datos del usuario via AJAX
@@ -721,18 +724,21 @@
         }
         
         // Validar contraseña en modo creación
-        if (!isEditMode && password.length < 8) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Contraseña débil',
-                text: 'La contraseña debe tener al menos 8 caracteres',
-                confirmButtonColor: '#dc2626'
-            });
-            return;
+        // En creación, la contraseña es opcional; si se ingresa, validar robustez
+        if (!isEditMode && password) {
+            if (password.length < 8) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Contraseña débil',
+                    text: 'La contraseña debe tener al menos 8 caracteres',
+                    confirmButtonColor: '#dc2626'
+                });
+                return;
+            }
         }
         
         // Validar fortaleza de contraseña
-        if (!isEditMode || (isEditMode && password)) {
+        if (password) {
             // Validar mayúscula
             if (!/[A-Z]/.test(password)) {
                 Swal.fire({
@@ -750,6 +756,16 @@
                     icon: 'error',
                     title: 'Contraseña débil',
                     text: 'La contraseña debe contener al menos un número',
+                    confirmButtonColor: '#dc2626'
+                });
+                return;
+            }
+            // Validar caracter especial
+            if (!/[!@#$%^&*()\-_=+\[\]{};:,./?]/.test(password)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Contraseña débil',
+                    text: 'La contraseña debe contener al menos un carácter especial',
                     confirmButtonColor: '#dc2626'
                 });
                 return;

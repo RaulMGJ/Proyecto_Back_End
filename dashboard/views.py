@@ -115,6 +115,9 @@ def login_view(request):
                 # Login exitoso - resetear intentos fallidos
                 user_obj.reset_failed_attempts()
                 login(request, user)
+                # Si el usuario debe cambiar la clave, redirigir al flujo de cambio
+                if hasattr(user_obj, 'debe_cambiar_clave') and user_obj.debe_cambiar_clave:
+                    return redirect('dashboard:reset_password')
                 return redirect('dashboard:home')
             else:
                 # Contraseña incorrecta - incrementar intentos fallidos
@@ -857,9 +860,21 @@ def guardar_usuario(request):
             usuario.id_rol = rol
             usuario.is_active = activo
             
-            # Actualizar contraseña solo si se proporcionó
+            # Reset de contraseña por administrador: generar temporal si se solicitó
             if password:
                 usuario.set_password(password)
+                usuario.debe_cambiar_clave = True
+                usuario.save(update_fields=['password', 'debe_cambiar_clave'])
+                try:
+                    send_mail(
+                        subject='Clave temporal de acceso',
+                        message=f'Se ha generado una clave temporal para tu cuenta. Usuario: {usuario.username}\nClave temporal: {password}',
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[usuario.email],
+                        fail_silently=True,
+                    )
+                except Exception:
+                    pass
             
             usuario.save()
             # Auditoría
@@ -879,13 +894,19 @@ def guardar_usuario(request):
                     'errors': {'usuario': ['Este nombre de usuario ya está en uso']}
                 })
             
-            # Validar que se proporcionó contraseña
-            if not password:
-                return JsonResponse({
-                    'success': False,
-                    'errors': {'password': ['La contraseña es requerida para nuevos usuarios']}
-                })
-            
+            # Generar clave temporal robusta si no se proporcionó
+            import random, string
+            def generar_clave_temporal(longitud=12):
+                mayus = random.choice(string.ascii_uppercase)
+                minus = random.choice(string.ascii_lowercase)
+                dig = random.choice(string.digits)
+                esp = random.choice('!@#$%^&*()-_=+[]{};:,./?')
+                restantes = ''.join(random.choices(string.ascii_letters + string.digits + '!@#$%^&*()-_=+[]{};:,./?', k=longitud-4))
+                clave = mayus + minus + dig + esp + restantes
+                return ''.join(random.sample(clave, len(clave)))
+
+            temp_password = password if password else generar_clave_temporal()
+
             # Crear usuario
             usuario = Usuario(
                 username=usuario_username,
@@ -896,7 +917,8 @@ def guardar_usuario(request):
                 id_rol=rol,
                 is_active=activo
             )
-            usuario.set_password(password)
+            usuario.set_password(temp_password)
+            usuario.debe_cambiar_clave = True
             usuario.save()
             # Auditoría
             Auditoria.objects.create(
@@ -906,6 +928,17 @@ def guardar_usuario(request):
                 detalle=f'ID: {usuario.id_usuario}, Nombre: {usuario.nombre}'
             )
             action = 'creado'
+            # Enviar correo con clave temporal
+            try:
+                send_mail(
+                    subject='Tu acceso al sistema - clave temporal',
+                    message=f'Hola {usuario.nombre},\nTu usuario es: {usuario.username}\nTu clave temporal es: {temp_password}\nPor favor cámbiala en tu primer ingreso.',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[usuario.email],
+                    fail_silently=True,
+                )
+            except Exception:
+                pass
         
         return JsonResponse({
             'success': True,
