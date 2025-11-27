@@ -147,6 +147,7 @@
             </h3>
         </div>
         
+        {% if user.is_superuser or user.id_rol.nombre == 'Administrador' %}
         <div class="col-md-3">
             <div class="lilis-card quick-action-card text-center" data-url="{% url 'dashboard:productos' %}">
                 <div class="lilis-card-body">
@@ -158,8 +159,21 @@
                 </div>
             </div>
         </div>
+        {% endif %}
         
-        {% if user.id_rol.nombre != 'Consulta' %}
+        {% if user.id_rol.nombre == 'Bodeguero' %}
+        <div class="col-md-3">
+            <div class="lilis-card quick-action-card text-center" data-url="{% url 'dashboard:productos' %}">
+                <div class="lilis-card-body">
+                    <div class="quick-action-icon bg-info-light text-info mx-auto">
+                        <i class="bi bi-eye"></i>
+                    </div>
+                    <h6 class="fw-bold">Consultar Productos</h6>
+                    <p class="text-muted small mb-0">Vista de productos (solo lectura)</p>
+                </div>
+            </div>
+        </div>
+        
         <div class="col-md-3">
             <div class="lilis-card quick-action-card text-center" data-url="{% url 'dashboard:inventarios' %}">
                 <div class="lilis-card-body">
@@ -167,11 +181,35 @@
                         <i class="bi bi-box-seam"></i>
                     </div>
                     <h6 class="fw-bold">Gestionar Inventario</h6>
-                    <p class="text-muted small mb-0">Ver y administrar stock completo</p>
+                    <p class="text-muted small mb-0">Administra el stock del almacén</p>
                 </div>
             </div>
         </div>
-        {% else %}
+        {% elif user.id_rol.nombre == 'Vendedor' %}
+        <div class="col-md-3">
+            <div class="lilis-card quick-action-card text-center" data-url="{% url 'dashboard:productos' %}">
+                <div class="lilis-card-body">
+                    <div class="quick-action-icon bg-info-light text-info mx-auto">
+                        <i class="bi bi-eye"></i>
+                    </div>
+                    <h6 class="fw-bold">Consultar Productos</h6>
+                    <p class="text-muted small mb-0">Vista de productos (solo lectura)</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="lilis-card quick-action-card text-center" data-url="{% url 'dashboard:inventarios' %}">
+                <div class="lilis-card-body">
+                    <div class="quick-action-icon bg-warning-light text-warning mx-auto">
+                        <i class="bi bi-clipboard-data"></i>
+                    </div>
+                    <h6 class="fw-bold">Consultar Inventario</h6>
+                    <p class="text-muted small mb-0">Ver disponibilidad de stock</p>
+                </div>
+            </div>
+        </div>
+        {% elif user.id_rol.nombre == 'Consulta' %}
         <div class="col-md-3">
             <div class="lilis-card quick-action-card text-center" data-url="{% url 'dashboard:productos' %}">
                 <div class="lilis-card-body">
