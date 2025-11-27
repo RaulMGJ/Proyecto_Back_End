@@ -624,8 +624,8 @@ def reset_password_view(request):
             return redirect('dashboard:forgot_password')
         
         if request.method == 'POST':
-            password = request.POST.get('password')
-            password_confirm = request.POST.get('password_confirm')
+            password = (request.POST.get('password') or '').strip()
+            password_confirm = (request.POST.get('password_confirm') or '').strip()
             
             # F-REC-05: Validación de contraseñas
             if password != password_confirm:
@@ -657,10 +657,10 @@ def reset_password_view(request):
                     })
                 messages.error(request, 'La contraseña debe contener al menos un número')
             else:
-                # F-REC-03: Cambiar contraseña y marcar token como usado
+                # F-REC-03: Cambiar contraseña y marcar token como usado (usar set_password para coherencia)
                 usuario = token.usuario
-                usuario.password = make_password(password)
-                usuario.save()
+                usuario.set_password(password)
+                usuario.save(update_fields=['password'])
                 
                 # Marcar token como usado
                 token.is_used = True
