@@ -34,22 +34,35 @@ class ProveedorForm(forms.ModelForm):
 @login_required
 def lista_proveedores(request):
     """Vista para listar todos los proveedores"""
-    proveedores = Proveedor.objects.all().order_by('-id_proveedor')
-    
+    proveedores_qs = Proveedor.objects.all().order_by('-id_proveedor')
+
     # Búsqueda
     search = request.GET.get('search', '')
     if search:
-        proveedores = proveedores.filter(nombre__icontains=search)
-    
-    # Paginación
-    paginator = Paginator(proveedores, 10)
-    page = request.GET.get('page')
+        proveedores_qs = proveedores_qs.filter(nombre__icontains=search) | proveedores_qs.filter(rut_nif__icontains=search)
+
+    # Paginación con selector de tamaño
+    per_page_param = request.GET.get('per_page')
+    if per_page_param:
+        per_page = int(per_page_param)
+        request.session['proveedores_per_page'] = per_page
+    else:
+        per_page = request.session.get('proveedores_per_page', 10)
+        if isinstance(per_page, str):
+            per_page = int(per_page)
+
+    paginator = Paginator(proveedores_qs, per_page)
+    page = request.GET.get('page') or 1
     proveedores = paginator.get_page(page)
-    
+
     context = {
         'proveedores': proveedores,
         'search': search,
-        'total_proveedores': Proveedor.objects.count(),
+        'per_page': per_page,
+        'proveedores_count': Proveedor.objects.count(),
+        'proveedores_activos': Proveedor.objects.count(),  # Sin campo de estado, usar total
+        'productos_proveedor': 0,
+        'ordenes_pendientes': 0,
     }
     return render(request, 'dashboard/proveedores.html', context)
 
