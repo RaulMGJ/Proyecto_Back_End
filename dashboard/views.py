@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.views.decorators.cache import never_cache
+from django.views.decorators.debug import sensitive_post_parameters
 from django.core.exceptions import PermissionDenied
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
@@ -71,6 +72,7 @@ from .forms import ProductoForm, InventarioForm
 from .models import Auditoria
 
 @never_cache
+@sensitive_post_parameters('password')
 def login_view(request):
     """Vista de login personalizada con protección anti-fuerza bruta"""
     # Si el usuario ya está autenticado, redirigir al dashboard
@@ -611,6 +613,7 @@ def forgot_password_view(request):
     
     return render(request, 'dashboard/forgot_password.html')
 
+@sensitive_post_parameters('password', 'password_confirm')
 def reset_password_view(request):
     """Vista para resetear contraseña con token"""
     token_str = request.GET.get('token') or request.POST.get('token')
