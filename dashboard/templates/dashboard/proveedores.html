@@ -124,7 +124,7 @@
             </h5>
             <div class="row g-3">
                 <div class="col-md-4">
-                    <input type="text" class="lilis-form-control" id="searchProvider" placeholder="Buscar por nombre o RUC...">
+                    <input type="text" class="lilis-form-control" id="searchProvider" placeholder="Buscar por nombre o RUT...">
                 </div>
                 <div class="col-md-2">
                     <select class="lilis-form-control" id="filterCity">
@@ -297,9 +297,9 @@
                                 <div class="lilis-form-text">Nombre comercial o razón social</div>
                             </div>
                             <div class="col-md-6">
-                                <label class="lilis-form-label">RUC *</label>
-                                <input type="text" class="lilis-form-control" name="ruc" required maxlength="11" pattern="[0-9]{11}" title="Debe contener exactamente 11 dígitos">
-                                <div class="lilis-form-text">Registro Único de Contribuyente (11 dígitos)</div>
+                                <label class="lilis-form-label">RUT *</label>
+                                <input type="text" class="lilis-form-control" name="rut_nif" required maxlength="12" placeholder="12345678-5" title="Formato: 12345678-5 (sin puntos)">
+                                <div class="lilis-form-text">RUT chileno con guion y sin puntos</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="lilis-form-label">Persona de Contacto</label>
@@ -572,13 +572,14 @@
                 }
             }
             
-            // Validación específica para RUC (11 dígitos)
-            if (fieldName === 'ruc' && value) {
-                if (!/^\d{11}$/.test(value)) {
+            // Validación básica de formato para RUT chileno (cuerpo-dv)
+            if (fieldName === 'rut_nif' && value) {
+                const rutRegex = /^\d{7,8}-[\dKk]$/;
+                if (!rutRegex.test(value)) {
                     Swal.fire({
                         icon: 'error',
-                        title: 'RUC inválido',
-                        text: 'El RUC debe tener exactamente 11 dígitos numéricos',
+                        title: 'RUT inválido',
+                        text: 'Usa formato 12345678-5 o 1234567-K (sin puntos)',
                         confirmButtonColor: '#4F81F7',
                         confirmButtonText: 'Corregir'
                     });
