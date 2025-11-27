@@ -124,13 +124,9 @@
             </h5>
             <div class="row g-3">
                 <div class="col-md-6">
-                    <form method="get" class="d-flex gap-2">
-                        <input type="text" class="lilis-form-control" name="search" value="{% if search %}{{ search }}{% endif %}" placeholder="Buscar por nombre o RUT...">
+                    <form method="get" class="d-flex gap-2" id="providerSearchForm">
+                        <input type="text" class="lilis-form-control" name="search" id="providerSearchInput" value="{% if search %}{{ search }}{% endif %}" placeholder="Buscar por nombre o RUT..." autocomplete="off">
                         <input type="hidden" name="per_page" value="{{ per_page }}">
-                        <button class="btn btn-lilis-primary" type="submit">
-                            <i class="bi bi-search me-1"></i>
-                            Buscar
-                        </button>
                     </form>
                 </div>
                 <div class="col-md-2">
@@ -163,10 +159,10 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <button class="btn btn-outline-success w-100" onclick="exportProvidersToExcel()">
+                    <a class="btn btn-outline-success w-100" href="{% url 'proveedores:exportar_proveedores_excel' %}?{% if search %}search={{ search|urlencode }}&{% endif %}per_page={{ per_page }}">
                         <i class="bi bi-file-excel me-1"></i>
                         Exportar a Excel
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -688,24 +684,18 @@
         updateStepDisplay();
     }
     
-    // Filter Functions
-    function filterProviders() {
-        const searchTerm = document.getElementById('searchProvider').value.toLowerCase();
-        const cityFilter = document.getElementById('filterCity').value;
-        const typeFilter = document.getElementById('filterType').value;
-        const statusFilter = document.getElementById('filterStatus').value;
-        
-        const providerCards = document.querySelectorAll('#providersGrid > div[data-provider-id]');
-        
-        providerCards.forEach(card => {
-            const name = card.querySelector('h5').textContent.toLowerCase();
-            const visible = (!searchTerm || name.includes(searchTerm));
-            
-            if (visible) {
-                card.style.display = '';
-            } else {
-                card.style.display = 'none';
+    // Live search: enviar al servidor cuando se escribe
+    const searchInput = document.getElementById('providerSearchInput');
+    const searchForm = document.getElementById('providerSearchForm');
+    let searchTimeout = null;
+    if (searchInput && searchForm) {
+        searchInput.addEventListener('input', function() {
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
             }
+            searchTimeout = setTimeout(() => {
+                searchForm.submit();
+            }, 250);
         });
     }
     
@@ -718,18 +708,7 @@
         // Initialize step display
         updateStepDisplay();
         
-        // Filter event listeners
-        const searchInput = document.getElementById('searchProvider');
-        if (searchInput) {
-            searchInput.addEventListener('input', filterProviders);
-        }
-        
-        ['filterCity', 'filterType', 'filterStatus'].forEach(id => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.addEventListener('change', filterProviders);
-            }
-        });
+        // Otros filtros (placeholder): conectar cuando se definan en servidor
         
         // Modal event listeners
         const modal = document.getElementById('providerModal');

@@ -5,6 +5,9 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 from .models import Proveedor
 from django import forms
+from django.http import HttpResponse
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
 class ProveedorForm(forms.ModelForm):
     rut_nif = forms.CharField(
@@ -146,6 +149,72 @@ def editar_proveedor(request, proveedor_id):
         'action': 'editar'
     }
     return render(request, 'dashboard/form_proveedor.html', context)
+
+@login_required
+def exportar_proveedores_excel(request):
+    """Exporta proveedores (respetando filtros actuales) a Excel"""
+    # Solo administradores pueden acceder
+    user = request.user
+    if not (user.is_superuser or (hasattr(user, 'id_rol') and user.id_rol.nombre == 'Administrador')):
+        return JsonResponse({'success': False, 'message': 'No tienes permisos'}, status=403)
+
+    # Filtros: actualmente soportamos 'search' por nombre/RUT
+    search = request.GET.get('search', '')
+    proveedores_qs = Proveedor.objects.all().order_by('-id_proveedor')
+    if search:
+        proveedores_qs = proveedores_qs.filter(nombre__icontains=search) | proveedores_qs.filter(rut_nif__icontains=search)
+
+    # Crear libro de Excel
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Proveedores"
+
+    # Estilos
+    header_fill = PatternFill(start_color="4F81F7", end_color="4F81F7", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF", size=12)
+    border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+
+    # Encabezados (alineados con la grilla visible)
+    headers = ['ID', 'Nombre', 'Contacto', 'Dirección', 'País', 'RUT', 'Email', 'Email Secundario']
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num)
+        cell.value = header
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.border = border
+
+    # Llenar datos
+    for row_num, prov in enumerate(proveedores_qs, 2):
+        ws.cell(row=row_num, column=1).value = prov.id_proveedor
+        ws.cell(row=row_num, column=2).value = prov.nombre
+        ws.cell(row=row_num, column=3).value = prov.contacto or ''
+        ws.cell(row=row_num, column=4).value = prov.direccion or ''
+        ws.cell(row=row_num, column=5).value = prov.pais or ''
+        ws.cell(row=row_num, column=6).value = prov.rut_nif
+        ws.cell(row=row_num, column=7).value = prov.email or ''
+        ws.cell(row=row_num, column=8).value = prov.email_secundario or ''
+        for col_num in range(1, len(headers) + 1):
+            ws.cell(row=row_num, column=col_num).border = border
+            ws.cell(row=row_num, column=col_num).alignment = Alignment(vertical='center')
+
+    # Ajuste de columnas
+    column_widths = [8, 30, 25, 40, 15, 15, 30, 30]
+    for col_num, width in enumerate(column_widths, 1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(col_num)].width = width
+
+    # Respuesta HTTP
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=proveedores.xlsx'
+    wb.save(response)
+    return response
 
 @login_required
 def eliminar_proveedor(request, proveedor_id):
