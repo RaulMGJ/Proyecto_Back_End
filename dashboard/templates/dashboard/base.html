@@ -47,25 +47,34 @@
                 <div class="col-md-6">
                     <div class="d-flex align-items-center">
                         <img src="{% static 'images/LOGO-Lilis-2-03.png' %}" alt="Lilis Logo" class="lilis-logo">
+                        {% if user.is_authenticated %}
                         <a href="{% url 'dashboard:home' %}" class="lilis-brand">
                             Dulcería Lilis
                         </a>
+                        {% else %}
+                        <a href="{% url 'dashboard:login' %}" class="lilis-brand">
+                            Dulcería Lilis
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="d-flex justify-content-end align-items-center">
-                        <div class="me-3">
-                            <span class="text-white-50 small">Bienvenido,</span>
-                            <span class="text-white fw-medium">{{ user.nombre }}</span>
-                        </div>
-                        <a href="{% url 'usuarios:perfil' %}" class="btn btn-outline-light btn-sm me-2" title="Mi Perfil">
-                            <i class="bi bi-person-circle me-1"></i>
-                            Perfil
-                        </a>
-                        <a href="{% url 'dashboard:logout' %}" class="btn btn-outline-light btn-sm">
-                            <i class="bi bi-box-arrow-right me-1"></i>
-                            Cerrar Sesión
-                        </a>
+                        {% if user.is_authenticated %}
+                            <div class="me-3">
+                                <span class="text-white-50 small">Bienvenido,</span>
+                                <span class="text-white fw-medium">{{ user.nombre }}</span>
+                            </div>
+                            <a href="{% url 'dashboard:logout' %}" class="btn btn-outline-light btn-sm">
+                                <i class="bi bi-box-arrow-right me-1"></i>
+                                Cerrar Sesión
+                            </a>
+                        {% else %}
+                            <a href="{% url 'dashboard:login' %}" class="btn btn-outline-light btn-sm">
+                                <i class="bi bi-box-arrow-in-right me-1"></i>
+                                Iniciar Sesión
+                            </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
