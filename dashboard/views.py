@@ -264,39 +264,44 @@ def productos_view(request):
 @login_required
 @never_cache
 def inventarios_view(request):
-    """Vista de inventarios"""
+    """Vista de inventarios con paginación y selector de registros por página"""
     user = request.user
-    
     # Verificar permisos según rol
     rol_nombre = user.id_rol.nombre if hasattr(user, 'id_rol') and user.id_rol else None
-    
     # Bloquear acceso al rol CONSULTA
     if rol_nombre == 'Consulta':
         raise PermissionDenied("El rol Consulta no tiene permisos para acceder al inventario")
-    
     es_vendedor = rol_nombre == 'Vendedor'
     es_bodeguero = rol_nombre == 'Bodeguero'
     puede_editar = user.is_superuser or rol_nombre in ['Administrador', 'Bodeguero']
-    
-    inventarios = Inventario.objects.select_related('id_producto').all()
+    inventarios_qs = Inventario.objects.select_related('id_producto').all()
     now = timezone.now()
-    
     # Mock data para proveedores
     class MockProveedor:
         def __init__(self, id_proveedor, nombre):
             self.id_proveedor = id_proveedor
             self.nombre = nombre
-    
     proveedores = [
         MockProveedor(1, 'Distribuidora Nacional'),
         MockProveedor(2, 'Dulces Premium SAC'),
         MockProveedor(3, 'Confitería del Norte'),
     ]
-    
+    # Paginación - obtener de sesión o de parámetro GET
+    per_page_param = request.GET.get('per_page')
+    if per_page_param:
+        per_page = int(per_page_param)
+        request.session['inventarios_per_page'] = per_page
+    else:
+        per_page = request.session.get('inventarios_per_page', 10)
+        if isinstance(per_page, str):
+            per_page = int(per_page)
+    paginator = Paginator(inventarios_qs, per_page)
+    page = request.GET.get('page', 1)
+    inventarios = paginator.get_page(page)
     context = {
         'inventarios': inventarios,
         'proveedores': proveedores,
-        'total_productos': inventarios.count(),
+        'total_productos': inventarios_qs.count(),
         'stock_alto': 0,  # Calcular basado en lógica de stock
         'stock_medio': 0,
         'stock_bajo': 0,
@@ -305,6 +310,7 @@ def inventarios_view(request):
         'es_vendedor': es_vendedor,
         'es_bodeguero': es_bodeguero,
         'puede_editar': puede_editar,
+        'per_page': per_page,
     }
     return render(request, 'dashboard/inventarios.html', context)
 
@@ -695,27 +701,37 @@ def reset_password_view(request):
 @login_required
 @never_cache
 def usuarios_view(request):
-    """Vista de gestión de usuarios"""
+    """Vista de gestión de usuarios con paginación y selector de registros por página"""
     user = request.user
-    
     # Solo administradores pueden gestionar usuarios
     if not (user.is_superuser or (hasattr(user, 'id_rol') and user.id_rol.nombre == 'Administrador')):
         raise PermissionDenied("No tienes permisos para gestionar usuarios")
-    
     # Usar el modelo de Usuario personalizado
     from usuarios.models import Usuario
     from roles.models import Rol
-    usuarios = Usuario.objects.select_related('id_rol').all()
+    usuarios_qs = Usuario.objects.select_related('id_rol').all()
     roles = Rol.objects.all()
-    
+    # Paginación - obtener de sesión o de parámetro GET
+    per_page_param = request.GET.get('per_page')
+    if per_page_param:
+        per_page = int(per_page_param)
+        request.session['usuarios_per_page'] = per_page
+    else:
+        per_page = request.session.get('usuarios_per_page', 10)
+        if isinstance(per_page, str):
+            per_page = int(per_page)
+    paginator = Paginator(usuarios_qs, per_page)
+    page = request.GET.get('page', 1)
+    usuarios = paginator.get_page(page)
     context = {
         'usuarios': usuarios,
         'roles': roles,
-        'usuarios_count': usuarios.count(),
-        'usuarios_activos': usuarios.filter(is_active=True).count(),
-        'usuarios_inactivos': usuarios.filter(is_active=False).count(),
+        'usuarios_count': usuarios_qs.count(),
+        'usuarios_activos': usuarios_qs.filter(is_active=True).count(),
+        'usuarios_inactivos': usuarios_qs.filter(is_active=False).count(),
         'nuevos_usuarios': 0,  # Mock data
         'user': request.user,
+        'per_page': per_page,
     }
     return render(request, 'dashboard/usuarios.html', context)
 
