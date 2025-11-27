@@ -82,8 +82,8 @@ class PasswordResetToken(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.expires_at:
-            # Token válido por 1 hora
-            self.expires_at = timezone.now() + timedelta(hours=1)
+            # Token válido por 5 minutos
+            self.expires_at = timezone.now() + timedelta(minutes=5)
         super().save(*args, **kwargs)
     
     def is_valid(self):

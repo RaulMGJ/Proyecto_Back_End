@@ -623,6 +623,7 @@ def reset_password_view(request):
             password = request.POST.get('password')
             password_confirm = request.POST.get('password_confirm')
             
+            # F-REC-05: Validación de contraseñas
             if password != password_confirm:
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return JsonResponse({
@@ -637,8 +638,22 @@ def reset_password_view(request):
                         'message': 'La contraseña debe tener al menos 8 caracteres'
                     })
                 messages.error(request, 'La contraseña debe tener al menos 8 caracteres')
+            elif not any(c.isupper() for c in password):
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'La contraseña debe contener al menos una letra mayúscula'
+                    })
+                messages.error(request, 'La contraseña debe contener al menos una letra mayúscula')
+            elif not any(c.isdigit() for c in password):
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'La contraseña debe contener al menos un número'
+                    })
+                messages.error(request, 'La contraseña debe contener al menos un número')
             else:
-                # Cambiar contraseña
+                # F-REC-03: Cambiar contraseña y marcar token como usado
                 usuario = token.usuario
                 usuario.password = make_password(password)
                 usuario.save()
