@@ -12,10 +12,18 @@ class ProveedorForm(forms.ModelForm):
         required=True,
         widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': '12345678-5'})
     )
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={'class': 'form-input', 'placeholder': 'contacto@proveedor.cl'})
+    )
+    email_secundario = forms.EmailField(
+        required=False,
+        widget=forms.EmailInput(attrs={'class': 'form-input', 'placeholder': 'alternativo@proveedor.cl'})
+    )
 
     class Meta:
         model = Proveedor
-        fields = ['rut_nif', 'nombre', 'contacto', 'direccion']
+        fields = ['rut_nif', 'nombre', 'contacto', 'direccion', 'email', 'email_secundario']
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Nombre del proveedor'}),
             'contacto': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Persona de contacto'}),
@@ -74,6 +82,8 @@ def agregar_proveedor(request):
                         'contacto': proveedor.contacto or '',
                         'direccion': proveedor.direccion or '',
                         'rut_nif': form.cleaned_data.get('rut_nif', ''),
+                        'email': form.cleaned_data.get('email', ''),
+                        'email_secundario': form.cleaned_data.get('email_secundario', ''),
                         'estado': 'ACTIVO'
                     }
                 })

@@ -47,6 +47,18 @@ class Proveedor(models.Model):
         blank=False,
         validators=[validar_rut_chileno]
     )
+    email = models.EmailField(
+        verbose_name="Email",
+        help_text="Email principal (obligatorio)",
+        blank=False,
+        default="no-email@example.invalid"
+    )
+    email_secundario = models.EmailField(
+        verbose_name="Email Secundario",
+        help_text="Email alternativo (opcional)",
+        blank=True,
+        null=True
+    )
 
     class Meta:
         db_table = 'proveedor'

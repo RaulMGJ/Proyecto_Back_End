@@ -319,11 +319,12 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="lilis-form-label">Email Principal *</label>
-                                <input type="email" class="lilis-form-control" name="email" required>
+                                <input type="email" class="lilis-form-control" name="email" required placeholder="contacto@proveedor.cl">
+                                <div class="lilis-form-text">Obligatorio. Se usará para notificaciones.</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="lilis-form-label">Email Secundario</label>
-                                <input type="email" class="lilis-form-control" name="email_secundario">
+                                <input type="email" class="lilis-form-control" name="email_secundario" placeholder="alternativo@proveedor.cl">
                             </div>
                         </div>
                     </div>
@@ -556,14 +557,14 @@
                 return false;
             }
             
-            // Validación específica para email
-            if (field.type === 'email' && value) {
+            // Validación específica para email principal
+            if (field.type === 'email' && fieldName === 'email' && value) {
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(value)) {
                     Swal.fire({
                         icon: 'error',
                         title: 'Email inválido',
-                        text: 'Por favor ingresa un email válido',
+                        text: 'Ingresa un email con formato válido (usuario@dominio.tld)',
                         confirmButtonColor: '#4F81F7',
                         confirmButtonText: 'Corregir'
                     });
