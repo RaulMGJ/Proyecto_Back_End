@@ -78,20 +78,23 @@ def login_view(request):
         return redirect('dashboard:home')
     
     if request.method == 'POST':
-        username = request.POST.get('username', '').strip()
+        identificador = request.POST.get('username', '').strip()
         password = request.POST.get('password', '').strip()
         
         # F-LOGIN-05: Validar campos obligatorios antes de procesar
-        if not username or not password:
+        if not identificador or not password:
             context = {
                 'error_type': 'empty_fields',
-                'username': username
+                'username': identificador
             }
             return render(request, 'dashboard/new_login.html', context)
-        
-        # Verificar si el usuario existe
+        # Permitir login por username o correo
         try:
-            user_obj = Usuario.objects.get(username=username)
+            if '@' in identificador:
+                user_obj = Usuario.objects.get(correo=identificador)
+            else:
+                user_obj = Usuario.objects.get(username=identificador)
+            username_real = user_obj.username
             
             # Verificar si la cuenta está bloqueada
             if user_obj.is_account_locked():
@@ -99,12 +102,12 @@ def login_view(request):
                 context = {
                     'error_type': 'locked',
                     'locked_minutes': tiempo_restante,
-                    'username': username
+                    'username': identificador
                 }
                 return render(request, 'dashboard/new_login.html', context)
             
             # Intentar autenticar
-            user = authenticate(request, username=username, password=password)
+            user = authenticate(request, username=username_real, password=password)
             
             if user is not None:
                 # Login exitoso - resetear intentos fallidos
@@ -121,23 +124,23 @@ def login_view(request):
                     context = {
                         'error_type': 'locked',
                         'locked_minutes': 30,
-                        'username': username
+                        'username': identificador
                     }
                 else:
                     # Advertencia de intentos restantes
                     context = {
                         'error_type': 'invalid',
                         'attempts_remaining': intentos_restantes,
-                        'username': username
+                        'username': identificador
                     }
                 
                 return render(request, 'dashboard/new_login.html', context)
         
         except Usuario.DoesNotExist:
-            # Usuario no existe - no dar pistas de seguridad
+            # Usuario/Correo no existe - no dar pistas de seguridad
             context = {
                 'error_type': 'invalid',
-                'username': username
+                'username': identificador
             }
             return render(request, 'dashboard/new_login.html', context)
     

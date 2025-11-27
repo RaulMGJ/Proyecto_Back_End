@@ -39,7 +39,7 @@
                     <div class="lilis-login-header">
                         <img src="{% static 'images/LOGO-Lilis-2-03.png' %}" alt="Lilis Logo" class="lilis-login-logo">
                         <h3 class="lilis-login-title">Iniciar sesión</h3>
-                        <p class="lilis-login-subtitle">Accede con tu correo y contraseña</p>
+                        <p class="lilis-login-subtitle">Ingresa tu usuario o correo y contraseña</p>
                     </div>
                     
                     <!-- Form -->
@@ -57,12 +57,12 @@
                             
                             <!-- Username Field -->
                             <div class="lilis-form-group">
-                                <label for="id_username" class="lilis-form-label">Usuario</label>
+                                <label for="id_username" class="lilis-form-label">Usuario o Correo</label>
                                 <input type="text" 
                                        class="lilis-form-control {% if form.username.errors %}is-invalid{% endif %}" 
                                        id="id_username" 
                                        name="username" 
-                                       placeholder="Ingresa tu usuario"
+                                       placeholder="usuario o correo"
                                        value="{{ form.username.value|default:'' }}"
                                        required>
                                 {% if form.username.errors %}
