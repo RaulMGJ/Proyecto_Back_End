@@ -317,37 +317,42 @@ def inventarios_view(request):
 @login_required
 @never_cache
 def proveedores_view(request):
-    """Vista ficticia de proveedores"""
+    """Vista de proveedores con datos reales y paginación"""
     user = request.user
-    
     # Solo administradores pueden acceder
     if not (user.is_superuser or (hasattr(user, 'id_rol') and user.id_rol.nombre == 'Administrador')):
         raise PermissionDenied("No tienes permisos para acceder a esta sección")
-    
-    # Datos ficticios para proveedores
-    class MockProveedor:
-        def __init__(self, id_proveedor, nombre, contacto, telefono, email):
-            self.id_proveedor = id_proveedor
-            self.nombre = nombre
-            self.contacto = contacto
-            self.telefono = telefono
-            self.email = email
-    
-    proveedores = [
-        MockProveedor(1, 'Distribuidora Nacional', 'Juan Pérez', '123-456-7890', 'contacto@distrinacional.com'),
-        MockProveedor(2, 'Dulces Premium SAC', 'María García', '098-765-4321', 'ventas@dulcespremium.com'),
-        MockProveedor(3, 'Confitería del Norte', 'Carlos López', '555-123-4567', 'info@confiterianorte.com'),
-    ]
-    
-    # Productos disponibles para asociar con proveedores
-    productos_disponibles = Producto.objects.all()
-    
+
+    # Datos reales de proveedores
+    from proveedores.models import Proveedor
+    proveedores_qs = Proveedor.objects.all().order_by('-id_proveedor')
+
+    # Búsqueda (nombre o RUT)
+    search = request.GET.get('search', '')
+    if search:
+        proveedores_qs = proveedores_qs.filter(nombre__icontains=search) | proveedores_qs.filter(rut_nif__icontains=search)
+
+    # Paginación y selector de registros por página
+    per_page_param = request.GET.get('per_page')
+    if per_page_param:
+        per_page = int(per_page_param)
+        request.session['proveedores_per_page'] = per_page
+    else:
+        per_page = request.session.get('proveedores_per_page', 10)
+        if isinstance(per_page, str):
+            per_page = int(per_page)
+
+    paginator = Paginator(proveedores_qs, per_page)
+    page = request.GET.get('page', 1)
+    proveedores = paginator.get_page(page)
+
     context = {
         'proveedores': proveedores,
-        'productos_disponibles': productos_disponibles,
-        'proveedores_count': len(proveedores),
-        'proveedores_activos': len(proveedores),
-        'productos_proveedor': productos_disponibles.count(),
+        'search': search,
+        'per_page': per_page,
+        'proveedores_count': Proveedor.objects.count(),
+        'proveedores_activos': Proveedor.objects.count(),  # sin campo de estado, usamos total
+        'productos_proveedor': 0,
         'ordenes_pendientes': 0,
         'user': request.user,
     }
