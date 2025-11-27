@@ -522,6 +522,9 @@ def forgot_password_view(request):
             # Crear token de recuperación
             token = PasswordResetToken.objects.create(usuario=usuario)
             
+            # Calcular minutos de expiración
+            expiration_minutes = int((token.expires_at - token.created_at).total_seconds() / 60)
+            
             # Construir URL de recuperación
             reset_url = request.build_absolute_uri(
                 f'/reset-password/?token={token.token}'
@@ -531,7 +534,8 @@ def forgot_password_view(request):
             html_message = render_to_string('dashboard/password_reset_email.html', {
                 'usuario': usuario,
                 'reset_url': reset_url,
-                'token': token
+                'token': token,
+                'expiration_minutes': expiration_minutes
             })
             plain_message = strip_tags(html_message)
             
