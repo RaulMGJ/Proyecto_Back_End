@@ -128,6 +128,9 @@ def agregar_producto(request):
             messages.success(request, f'Producto "{producto.nombre}" creado exitosamente.')
             return redirect('productos:lista_productos')
         else:
+            # Añadir mensaje claro cuando el formulario es inválido (no-AJAX)
+            if not request.headers.get('X-Requested-With'):
+                messages.error(request, 'No se pudo guardar el producto. Por favor, revisa los campos obligatorios.')
             # Si hay errores y es AJAX, responder con JSON
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({

@@ -108,6 +108,9 @@ def agregar_proveedor(request):
             messages.success(request, f'Proveedor "{proveedor.nombre}" creado exitosamente.')
             return redirect('proveedores:lista_proveedores')
         else:
+            # Si no es AJAX, informar con mensaje de error y re-renderizar
+            if not request.headers.get('X-Requested-With'):
+                messages.error(request, 'No se pudo guardar el proveedor. Verifica los campos obligatorios.')
             # Si hay errores y es AJAX, responder con JSON
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({

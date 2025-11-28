@@ -134,13 +134,13 @@
     
     <!-- Alert Container -->
     <div class="alert-container mb-3">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="lilis-alert lilis-alert-{{ message.tags|default:'info' }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
+        <div id="djangoMessages" class="d-none">
+            {% if messages %}
+                {% for message in messages %}
+                    <div data-level="{{ message.tags|default:'info' }}">{{ message|escape }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
     </div>
     
     <!-- Filters Card -->
@@ -159,7 +159,7 @@
                             <i class="bi bi-filter me-1"></i>
                             Buscar por nombre, descripción o precio
                         </label>
-                        <div class="input-group">
+                            <div class="input-group">
                             <span class="input-group-text bg-white">
                                 <i class="bi bi-search"></i>
                             </span>
@@ -169,13 +169,6 @@
                                    id="searchProduct" 
                                    placeholder="Escribe para buscar..."
                                    value="{{ search }}">
-                            {% if search %}
-                            <a href="{% url 'productos:lista_productos' %}" 
-                               class="btn btn-outline-secondary"
-                               title="Limpiar búsqueda">
-                                <i class="bi bi-x-lg"></i>
-                            </a>
-                            {% endif %}
                         </div>
                     </div>
                     
@@ -921,6 +914,19 @@
                 searchTimeout = setTimeout(() => {
                     document.getElementById('searchForm').submit();
                 }, 500); // Esperar 500ms después de que el usuario deje de escribir
+            });
+        }
+
+        // Mostrar mensajes de Django como SweetAlert
+        const msgContainer = document.getElementById('djangoMessages');
+        if (msgContainer) {
+            const items = msgContainer.querySelectorAll('div[data-level]');
+            items.forEach(el => {
+                const level = (el.getAttribute('data-level') || 'info').toLowerCase();
+                const iconMap = {success:'success', info:'info', warning:'warning', error:'error'};
+                const icon = iconMap[level] || 'info';
+                const text = el.textContent;
+                Swal.fire({ icon, title: text, confirmButtonColor: '#dc2626' });
             });
         }
     });
