@@ -129,6 +129,61 @@
                     }
                 });
             }, 5000);
+
+            // Parche global F-FIRST-LOGIN-02: Interceptar respuestas 403 must_change_password
+            (function wrapFetchForPasswordChange() {
+                const originalFetch = window.fetch;
+                window.fetch = async function(...args) {
+                    const response = await originalFetch(...args);
+                    if (response && response.status === 403) {
+                        try {
+                            const cloned = response.clone();
+                            const data = await cloned.json().catch(() => null);
+                            if (data && data.must_change_password && data.redirect) {
+                                // Opcional: mostrar mensaje breve antes de redirigir
+                                window.LilisSystem.showAlert(data.message || 'Debes cambiar tu contraseña primero', 'warning');
+                                setTimeout(() => {
+                                    window.location.href = data.redirect;
+                                }, 800);
+                            }
+                        } catch (e) {
+                            // Ignorar errores de parseo
+                        }
+                    }
+                    return response;
+                };
+            })();
+
+            // Interceptar también XMLHttpRequest para consistencia
+            (function wrapXHRForPasswordChange() {
+                const OriginalXHR = window.XMLHttpRequest;
+                function CustomXHR() {
+                    const xhr = new OriginalXHR();
+                    const originalOpen = xhr.open;
+                    xhr.open = function(method, url, ...rest) {
+                        this.__lilis_url = url;
+                        return originalOpen.call(this, method, url, ...rest);
+                    };
+                    xhr.addEventListener('load', function() {
+                        if (this.status === 403) {
+                            try {
+                                const contentType = this.getResponseHeader('Content-Type') || '';
+                                if (contentType.includes('application/json')) {
+                                    const data = JSON.parse(this.responseText);
+                                    if (data && data.must_change_password && data.redirect) {
+                                        window.LilisSystem.showAlert(data.message || 'Debes cambiar tu contraseña primero', 'warning');
+                                        setTimeout(() => { window.location.href = data.redirect; }, 800);
+                                    }
+                                }
+                            } catch (e) {
+                                // Silencio
+                            }
+                        }
+                    });
+                    return xhr;
+                }
+                window.XMLHttpRequest = CustomXHR;
+            })();
         });
     </script>
     
