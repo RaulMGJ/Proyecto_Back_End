@@ -1155,6 +1155,112 @@ def eliminar_usuario(request, usuario_id):
         }, status=500)
 
 @login_required
+def reset_usuario_password(request, usuario_id):
+    """API para resetear contraseña de un usuario (F-RESET-ADMIN-01, 02, 03)"""
+    user = request.user
+    
+    # Solo administradores pueden acceder
+    if not (user.is_superuser or (hasattr(user, 'id_rol') and user.id_rol.nombre == 'Administrador')):
+        return JsonResponse({'success': False, 'message': 'No tienes permisos'}, status=403)
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+    
+    try:
+        from usuarios.models import Usuario
+        import random, string
+        
+        usuario = get_object_or_404(Usuario, id_usuario=usuario_id)
+        
+        # No permitir resetear la contraseña del usuario actual
+        if usuario.id_usuario == user.id_usuario:
+            return JsonResponse({
+                'success': False,
+                'message': 'No puedes resetear tu propia contraseña desde aquí'
+            })
+        
+        # Generar clave temporal robusta (F-RESET-ADMIN-01)
+        def generar_clave_temporal(longitud=12):
+            mayus = random.choice(string.ascii_uppercase)
+            minus = random.choice(string.ascii_lowercase)
+            dig = random.choice(string.digits)
+            esp = random.choice('!@#$%^&*()-_=+[]{};:,./?')
+            restantes = ''.join(random.choices(
+                string.ascii_letters + string.digits + '!@#$%^&*()-_=+[]{};:,./?',
+                k=longitud-4
+            ))
+            clave = mayus + minus + dig + esp + restantes
+            return ''.join(random.sample(clave, len(clave)))
+        
+        temp_password = generar_clave_temporal()
+        
+        # Resetear contraseña y marcar flag (F-RESET-ADMIN-01)
+        usuario.set_password(temp_password)
+        usuario.debe_cambiar_clave = True
+        usuario.save(update_fields=['password', 'debe_cambiar_clave'])
+        
+        # Auditoría
+        Auditoria.objects.create(
+            usuario=user,
+            accion='RESET_PASSWORD',
+            entidad='Usuario',
+            detalle=f'ID: {usuario.id_usuario}, Nombre: {usuario.nombre}'
+        )
+        
+        # Enviar correo con clave temporal (F-RESET-ADMIN-02)
+        try:
+            login_url = request.build_absolute_uri(reverse('dashboard:login'))
+            html_message = (
+                f"""
+                <div style='font-family:Segoe UI, Arial, sans-serif; color:#111; line-height:1.5;'>
+                  <h2 style='margin:0 0 12px; color:#dc2626;'>Dulcería Lilis</h2>
+                  <p>Hola <strong>{usuario.nombre}</strong>,</p>
+                  <p>El administrador ha reseteado tu contraseña. Se ha generado una clave temporal para tu cuenta.</p>
+                  <div style='background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:12px; margin:14px 0;'>
+                    <p style='margin:0;'><strong>Usuario:</strong> {usuario.username}</p>
+                    <p style='margin:6px 0 0;'><strong>Clave temporal:</strong> <code style='font-size:14px;'>{temp_password}</code></p>
+                  </div>
+                  <p>Puedes ingresar desde este enlace:</p>
+                  <p><a href='{login_url}' style='background:#dc2626; color:#fff; padding:10px 14px; border-radius:6px; text-decoration:none;'>Ir al acceso</a></p>
+                  <p style='color:#6b7280; font-size:13px;'>Al ingresar se te pedirá cambiar la contraseña por una nueva.</p>
+                </div>
+                """
+            )
+            send_mail(
+                subject='Dulcería Lilis - Tu contraseña ha sido reseteada',
+                message=(
+                    f'Hola {usuario.nombre},\n'
+                    f'El administrador ha reseteado tu contraseña.\n\n'
+                    f'Usuario: {usuario.username}\n'
+                    f'Clave temporal: {temp_password}\n\n'
+                    f'URL de acceso: {login_url}\n\n'
+                    'Al ingresar se te pedirá cambiar la contraseña por una nueva.'
+                ),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[usuario.email],
+                fail_silently=False,
+                html_message=html_message,
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Contraseña reseteada. Se envió correo a {usuario.email}'
+            })
+            
+        except Exception as email_error:
+            # Si falla el correo, revertir el cambio
+            return JsonResponse({
+                'success': False,
+                'message': f'Error al enviar correo: {str(email_error)}'
+            }, status=500)
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=500)
+
+@login_required
 def cambiar_estado_usuario(request, usuario_id):
     """API para activar/desactivar un usuario"""
     user = request.user

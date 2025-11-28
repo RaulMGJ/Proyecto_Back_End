@@ -162,6 +162,9 @@
                                 <button class="btn btn-outline-primary btn-sm" onclick="editUser('{{ usuario.id_usuario }}')" title="Editar">
                                     <i class="bi bi-pencil"></i>
                                 </button>
+                                <button class="btn btn-outline-info btn-sm" onclick="resetUserPassword('{{ usuario.id_usuario }}', '{{ usuario.nombre }}')" title="Resetear Contraseña">
+                                    <i class="bi bi-key"></i>
+                                </button>
                                 {% if usuario.is_active %}
                                     <button class="btn btn-outline-warning btn-sm" onclick="toggleUserStatus('{{ usuario.id_usuario }}', false)" title="Desactivar">
                                         <i class="bi bi-pause-circle"></i>
@@ -507,6 +510,71 @@
         });
     }
     
+    function resetUserPassword(userId, userName) {
+        console.log('Reseteando contraseña del usuario:', userId);
+        Swal.fire({
+            title: '¿Resetear contraseña?',
+            html: `Se generará una clave temporal para <strong>${userName}</strong> y se le enviará por correo.<br><br>El usuario deberá cambiarla en su próximo inicio de sesión.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3b82f6',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Sí, resetear',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Generando clave temporal...',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    willOpen: () => { Swal.showLoading(); }
+                });
+                
+                const formData = new FormData();
+                formData.append('user_id', userId);
+                formData.append('reset_password', 'true');
+                
+                fetch(`/dashboard/usuarios/reset-password/${userId}/`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrftoken
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Contraseña reseteada!',
+                            html: `Se ha enviado un correo a <strong>${userName}</strong> con la clave temporal.`,
+                            confirmButtonColor: '#dc2626',
+                            timer: 3000
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'No se pudo resetear la contraseña',
+                            confirmButtonColor: '#dc2626'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un error al resetear la contraseña',
+                        confirmButtonColor: '#dc2626'
+                    });
+                });
+            }
+        });
+    }
+    
     function toggleUserStatus(userId, activate) {
         console.log('Cambiando estado del usuario:', userId, 'activar:', activate);
         const action = activate ? 'activar' : 'desactivar';
@@ -608,6 +676,7 @@
                 <td>
                     <div class="user-actions">
                         <button class="btn btn-outline-primary btn-sm" onclick="editUser('${u.id}')" title="Editar"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-outline-info btn-sm" onclick="resetUserPassword('${u.id}', '${u.nombre}')" title="Resetear Contraseña"><i class="bi bi-key"></i></button>
                         ${u.is_active ? `<button class="btn btn-outline-warning btn-sm" onclick="toggleUserStatus('${u.id}', false)" title="Desactivar"><i class="bi bi-pause-circle"></i></button>` : `<button class="btn btn-outline-success btn-sm" onclick="toggleUserStatus('${u.id}', true)" title="Activar"><i class="bi bi-play-circle"></i></button>`}
                         <button class="btn btn-lilis-danger btn-sm" onclick="deleteUser('${u.id}')" title="Eliminar"><i class="bi bi-trash"></i></button>
                     </div>
