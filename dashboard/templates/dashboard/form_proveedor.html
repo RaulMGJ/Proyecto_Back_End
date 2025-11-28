@@ -595,6 +595,12 @@
         const formData = new FormData(this);
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
         
+        // DEBUG: Ver qué se está enviando
+        console.log('=== DATOS DEL FORMULARIO ===');
+        for (let [key, value] of formData.entries()) {
+            console.log(key + ': ' + value);
+        }
+        
         fetch('{% url "proveedores:agregar_proveedor" %}', {
             method: 'POST',
             body: formData,
@@ -603,7 +609,10 @@
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Response status:', response.status);
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 // Agregar proveedor a la lista inmediatamente
