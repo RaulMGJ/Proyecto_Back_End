@@ -358,21 +358,9 @@
                                 <input type="text" class="lilis-form-control" name="rut_nif" required maxlength="12" placeholder="12345678-5" title="Formato: 12345678-5 (sin puntos)">
                                 <div class="lilis-form-text">RUT chileno con guion y sin puntos</div>
                             </div>
-                            <div class="col-md-6">
-                                <label class="lilis-form-label">Persona de Contacto</label>
-                                <input type="text" class="lilis-form-control" name="contacto">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="lilis-form-label">Cargo del Contacto</label>
-                                <input type="text" class="lilis-form-control" name="cargo_contacto">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="lilis-form-label">Teléfono Principal *</label>
-                                <input type="tel" class="lilis-form-control" name="telefono" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="lilis-form-label">Teléfono Secundario</label>
-                                <input type="tel" class="lilis-form-control" name="telefono_secundario">
+                            <div class="col-md-12">
+                                <label class="lilis-form-label">Persona de Contacto *</label>
+                                <input type="text" class="lilis-form-control" name="contacto" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="lilis-form-label">Email Principal *</label>
@@ -394,23 +382,11 @@
                         </h6>
                         
                         <div class="row g-3">
-                            <div class="col-md-8">
+                            <div class="col-md-12">
                                 <label class="lilis-form-label">Dirección *</label>
-                                <input type="text" class="lilis-form-control" name="direccion" required>
+                                <textarea class="lilis-form-control" name="direccion" rows="2" required></textarea>
                             </div>
-                            <div class="col-md-4">
-                                <label class="lilis-form-label">Código Postal</label>
-                                <input type="text" class="lilis-form-control" name="codigo_postal">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="lilis-form-label">Distrito</label>
-                                <input type="text" class="lilis-form-control" name="distrito">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="lilis-form-label">Provincia</label>
-                                <input type="text" class="lilis-form-control" name="provincia">
-                            </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <label class="lilis-form-label">País *</label>
                                 <select class="lilis-form-control" name="pais" required>
                                     <option value="">Seleccionar...</option>
