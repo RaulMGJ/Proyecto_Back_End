@@ -28,29 +28,45 @@
     </div>
 
     <div class="filter-section">
-        <form method="GET" class="row g-3">
+        <form id="auditFilterForm" method="GET" class="row g-3 align-items-end">
             <div class="col-md-3">
+                <label class="form-label small fw-semibold">Buscar</label>
+                <input type="text" name="search" class="form-control form-control-sm" placeholder="Texto en entidad, detalle o usuario" value="{{ search }}" id="searchInput">
+            </div>
+            <div class="col-md-2">
                 <label class="form-label small fw-semibold">Acción</label>
-                <select name="accion" class="form-select form-select-sm">
-                    <option value="">Todas</option>
-                    <option value="CREAR" {% if request.GET.accion == 'CREAR' %}selected{% endif %}>Creación</option>
-                    <option value="EDITAR" {% if request.GET.accion == 'EDITAR' %}selected{% endif %}>Edición</option>
-                    <option value="BORRAR" {% if request.GET.accion == 'BORRAR' %}selected{% endif %}>Eliminación</option>
+                <select name="accion" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="" {% if not accion %}selected{% endif %}>Todas</option>
+                    <option value="CREAR" {% if accion == 'CREAR' %}selected{% endif %}>Creación</option>
+                    <option value="EDITAR" {% if accion == 'EDITAR' %}selected{% endif %}>Edición</option>
+                    <option value="BORRAR" {% if accion == 'BORRAR' %}selected{% endif %}>Eliminación</option>
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label small fw-semibold">Entidad</label>
-                <input type="text" name="entidad" class="form-control form-control-sm" placeholder="Ej: Usuario, Producto..." value="{{ request.GET.entidad }}">
+                <input type="text" name="entidad" class="form-control form-control-sm" placeholder="Usuario, Producto..." value="{{ entidad }}">
             </div>
-            <div class="col-md-3">
-                <label class="form-label small fw-semibold">Usuario</label>
-                <input type="number" name="usuario" class="form-control form-control-sm" placeholder="ID de usuario" value="{{ request.GET.usuario }}">
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Usuario (ID)</label>
+                <input type="number" name="usuario" class="form-control form-control-sm" placeholder="ID" value="{{ usuario_filtro }}">
             </div>
-            <div class="col-md-3 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary btn-sm me-2"><i class="bi bi-funnel me-1"></i>Filtrar</button>
+            <div class="col-md-1">
+                <label class="form-label small fw-semibold">Por pág.</label>
+                <select name="per_page" class="form-select form-select-sm" onchange="this.form.submit()">
+                    {% for n in 10 25 50 100 %}
+                    <option value="{{ n }}" {% if per_page == n %}selected{% endif %}>{{ n }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm flex-grow-1"><i class="bi bi-funnel me-1"></i>Filtrar</button>
                 <a href="{% url 'dashboard:auditorias' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-circle me-1"></i>Limpiar</a>
             </div>
         </form>
+        <div class="mt-3 d-flex flex-wrap gap-2">
+            <button class="btn btn-outline-success btn-sm" onclick="exportAuditorias(false)"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar Página</button>
+            <button class="btn btn-success btn-sm" onclick="exportAuditorias(true)"><i class="bi bi-cloud-download me-1"></i>Exportar Todo</button>
+        </div>
     </div>
 
     <div class="lilis-card">
@@ -60,9 +76,27 @@
                     <thead class="table-light">
                         <tr>
                             <th style="width:50px"></th>
-                            <th>Fecha y Hora</th>
-                            <th>Acción</th>
-                            <th>Entidad</th>
+                            <th>
+                                <a href="?order_by=fecha_hora&order_direction={% if order_by == 'fecha_hora' and order_direction == 'asc' %}desc{% else %}asc{% endif %}{% if search %}&search={{ search }}{% endif %}{% if accion %}&accion={{ accion }}{% endif %}{% if entidad %}&entidad={{ entidad }}{% endif %}{% if usuario_filtro %}&usuario={{ usuario_filtro }}{% endif %}&per_page={{ per_page }}" class="text-decoration-none text-dark">Fecha y Hora
+                                    {% if order_by == 'fecha_hora' %}
+                                        <i class="bi bi-caret-{% if order_direction == 'asc' %}up{% else %}down{% endif %}-fill"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>
+                                <a href="?order_by=accion&order_direction={% if order_by == 'accion' and order_direction == 'asc' %}desc{% else %}asc{% endif %}{% if search %}&search={{ search }}{% endif %}{% if accion %}&accion={{ accion }}{% endif %}{% if entidad %}&entidad={{ entidad }}{% endif %}{% if usuario_filtro %}&usuario={{ usuario_filtro }}{% endif %}&per_page={{ per_page }}" class="text-decoration-none text-dark">Acción
+                                    {% if order_by == 'accion' %}
+                                        <i class="bi bi-caret-{% if order_direction == 'asc' %}up{% else %}down{% endif %}-fill"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>
+                                <a href="?order_by=entidad&order_direction={% if order_by == 'entidad' and order_direction == 'asc' %}desc{% else %}asc{% endif %}{% if search %}&search={{ search }}{% endif %}{% if accion %}&accion={{ accion }}{% endif %}{% if entidad %}&entidad={{ entidad }}{% endif %}{% if usuario_filtro %}&usuario={{ usuario_filtro }}{% endif %}&per_page={{ per_page }}" class="text-decoration-none text-dark">Entidad
+                                    {% if order_by == 'entidad' %}
+                                        <i class="bi bi-caret-{% if order_direction == 'asc' %}up{% else %}down{% endif %}-fill"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
                             <th>Detalle</th>
                             <th>Usuario</th>
                         </tr>
@@ -131,13 +165,13 @@
             <nav aria-label="Paginación de auditorías">
                 <ul class="pagination pagination-sm justify-content-center mb-0">
                     {% if page_obj.has_previous %}
-                    <li class="page-item"><a class="page-link" href="?page=1{% if request.GET.accion %}&accion={{ request.GET.accion }}{% endif %}{% if request.GET.entidad %}&entidad={{ request.GET.entidad }}{% endif %}{% if request.GET.usuario %}&usuario={{ request.GET.usuario }}{% endif %}"><i class="bi bi-chevron-double-left"></i></a></li>
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.accion %}&accion={{ request.GET.accion }}{% endif %}{% if request.GET.entidad %}&entidad={{ request.GET.entidad }}{% endif %}{% if request.GET.usuario %}&usuario={{ request.GET.usuario }}{% endif %}"><i class="bi bi-chevron-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="?page=1&per_page={{ per_page }}{% if search %}&search={{ search }}{% endif %}{% if accion %}&accion={{ accion }}{% endif %}{% if entidad %}&entidad={{ entidad }}{% endif %}{% if usuario_filtro %}&usuario={{ usuario_filtro }}{% endif %}&order_by={{ order_by }}&order_direction={{ order_direction }}"><i class="bi bi-chevron-double-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&per_page={{ per_page }}{% if search %}&search={{ search }}{% endif %}{% if accion %}&accion={{ accion }}{% endif %}{% if entidad %}&entidad={{ entidad }}{% endif %}{% if usuario_filtro %}&usuario={{ usuario_filtro }}{% endif %}&order_by={{ order_by }}&order_direction={{ order_direction }}"><i class="bi bi-chevron-left"></i></a></li>
                     {% endif %}
                     <li class="page-item active"><span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
                     {% if page_obj.has_next %}
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.accion %}&accion={{ request.GET.accion }}{% endif %}{% if request.GET.entidad %}&entidad={{ request.GET.entidad }}{% endif %}{% if request.GET.usuario %}&usuario={{ request.GET.usuario }}{% endif %}"><i class="bi bi-chevron-right"></i></a></li>
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.accion %}&accion={{ request.GET.accion }}{% endif %}{% if request.GET.entidad %}&entidad={{ request.GET.entidad }}{% endif %}{% if request.GET.usuario %}&usuario={{ request.GET.usuario }}{% endif %}"><i class="bi bi-chevron-double-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&per_page={{ per_page }}{% if search %}&search={{ search }}{% endif %}{% if accion %}&accion={{ accion }}{% endif %}{% if entidad %}&entidad={{ entidad }}{% endif %}{% if usuario_filtro %}&usuario={{ usuario_filtro }}{% endif %}&order_by={{ order_by }}&order_direction={{ order_direction }}"><i class="bi bi-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&per_page={{ per_page }}{% if search %}&search={{ search }}{% endif %}{% if accion %}&accion={{ accion }}{% endif %}{% if entidad %}&entidad={{ entidad }}{% endif %}{% if usuario_filtro %}&usuario={{ usuario_filtro }}{% endif %}&order_by={{ order_by }}&order_direction={{ order_direction }}"><i class="bi bi-chevron-double-right"></i></a></li>
                     {% endif %}
                 </ul>
             </nav>
@@ -149,6 +183,33 @@
 
 {% block extra_js %}
 <script>
+    // Auto-submit búsqueda con debounce
+    const searchInput = document.getElementById('searchInput');
+    let searchTimer = null;
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                document.getElementById('auditFilterForm').submit();
+            }, 500);
+        });
+    }
+
+    function buildQuery(all=false) {
+        const params = new URLSearchParams(window.location.search);
+        if (all) {
+            params.set('all', 'true');
+            params.delete('page');
+        } else {
+            params.delete('all');
+        }
+        return params.toString();
+    }
+    function exportAuditorias(all) {
+        const qs = buildQuery(all);
+        const url = `${window.location.origin}{% url 'dashboard:exportar_auditorias_excel' %}?${qs}`;
+        window.location.href = url;
+    }
     console.log('Auditorías cargadas: {{ total }}');
 </script>
 {% endblock %}

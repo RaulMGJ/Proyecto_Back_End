@@ -204,33 +204,176 @@ def home(request):
 
 @login_required
 def auditorias_view(request):
-    """Vista de lista completa de auditorías"""
-    auditorias = Auditoria.objects.select_related('usuario').order_by('-fecha_hora')
-    
-    # Filtros opcionales
-    accion = request.GET.get('accion')
-    entidad = request.GET.get('entidad')
-    usuario_id = request.GET.get('usuario')
-    
+    """Vista de lista completa de auditorías con búsqueda, orden, paginación y per_page persistente"""
+    auditorias_qs = Auditoria.objects.select_related('usuario').all()
+
+    # Filtros específicos legacy
+    accion = request.GET.get('accion', '')
+    entidad = request.GET.get('entidad', '').strip()
+    usuario_id = request.GET.get('usuario', '').strip()
+
     if accion:
-        auditorias = auditorias.filter(accion=accion)
+        auditorias_qs = auditorias_qs.filter(accion=accion)
     if entidad:
-        auditorias = auditorias.filter(entidad__icontains=entidad)
+        auditorias_qs = auditorias_qs.filter(entidad__icontains=entidad)
     if usuario_id:
-        auditorias = auditorias.filter(usuario_id=usuario_id)
-    
-    # Paginación
-    from django.core.paginator import Paginator
-    paginator = Paginator(auditorias, 50)
-    page_number = request.GET.get('page')
+        auditorias_qs = auditorias_qs.filter(usuario_id=usuario_id)
+
+    # Búsqueda global (search) sobre entidad, detalle, accion y nombre/username de usuario
+    search = (request.GET.get('search') or '').strip()
+    if search:
+        from django.db.models import Q
+        auditorias_qs = auditorias_qs.filter(
+            Q(entidad__icontains=search) |
+            Q(detalle__icontains=search) |
+            Q(accion__icontains=search) |
+            Q(usuario__nombre__icontains=search) |
+            Q(usuario__username__icontains=search)
+        )
+
+    # Ordenamiento seguro
+    order_by = request.GET.get('order_by', 'fecha_hora')
+    order_direction = request.GET.get('order_direction', 'desc')
+    allowed_fields = {'fecha_hora', 'accion', 'entidad'}  # usuario (nombre) se ordena vía anotación opcional
+    if order_by not in allowed_fields:
+        order_by = 'fecha_hora'
+    order_field = f'-{order_by}' if order_direction == 'desc' else order_by
+    auditorias_qs = auditorias_qs.order_by(order_field)
+
+    # per_page persistente en sesión
+    per_page_param = request.GET.get('per_page')
+    if per_page_param:
+        try:
+            per_page = int(per_page_param)
+        except ValueError:
+            per_page = 50
+        request.session['auditorias_per_page'] = per_page
+    else:
+        per_page = request.session.get('auditorias_per_page', 50)
+        if isinstance(per_page, str):
+            try:
+                per_page = int(per_page)
+            except ValueError:
+                per_page = 50
+
+    paginator = Paginator(auditorias_qs, per_page)
+    page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
-    
+
     context = {
         'page_obj': page_obj,
-        'total': auditorias.count(),
+        'total': auditorias_qs.count(),
+        'accion': accion,
+        'entidad': entidad,
+        'usuario_filtro': usuario_id,
+        'search': search,
+        'order_by': order_by,
+        'order_direction': order_direction,
+        'per_page': per_page,
     }
-    
     return render(request, 'dashboard/auditorias.html', context)
+
+@login_required
+def exportar_auditorias_excel(request):
+    """Exportar auditorías respetando filtros, búsqueda, orden y paginación.
+
+    Parámetros:
+    - accion, entidad, usuario: filtros específicos
+    - search: búsqueda global
+    - order_by, order_direction
+    - per_page, page
+    - all=true para todos los registros filtrados
+    - Si solo hay 1 registro y no se pide all, se exporta 'unico'
+    """
+    try:
+        auditorias_qs = Auditoria.objects.select_related('usuario').all()
+        accion = request.GET.get('accion', '')
+        entidad = (request.GET.get('entidad') or '').strip()
+        usuario_id = (request.GET.get('usuario') or '').strip()
+        if accion:
+            auditorias_qs = auditorias_qs.filter(accion=accion)
+        if entidad:
+            auditorias_qs = auditorias_qs.filter(entidad__icontains=entidad)
+        if usuario_id:
+            auditorias_qs = auditorias_qs.filter(usuario_id=usuario_id)
+        search = (request.GET.get('search') or '').strip()
+        if search:
+            from django.db.models import Q
+            auditorias_qs = auditorias_qs.filter(
+                Q(entidad__icontains=search) |
+                Q(detalle__icontains=search) |
+                Q(accion__icontains=search) |
+                Q(usuario__nombre__icontains=search) |
+                Q(usuario__username__icontains=search)
+            )
+        order_by = request.GET.get('order_by', 'fecha_hora')
+        order_direction = request.GET.get('order_direction', 'desc')
+        allowed_fields = {'fecha_hora', 'accion', 'entidad'}
+        if order_by not in allowed_fields:
+            order_by = 'fecha_hora'
+        order_field = f'-{order_by}' if order_direction == 'desc' else order_by
+        auditorias_qs = auditorias_qs.order_by(order_field)
+        total_filtrados = auditorias_qs.count()
+        per_page_param = request.GET.get('per_page')
+        try:
+            per_page = int(per_page_param) if per_page_param else request.session.get('auditorias_per_page', 50)
+        except ValueError:
+            per_page = 50
+        page_param = request.GET.get('page', '1')
+        try:
+            current_page = int(page_param)
+        except ValueError:
+            current_page = 1
+        export_all = request.GET.get('all', 'false').lower() in ['true','1','yes']
+        if export_all:
+            auditorias_export = auditorias_qs
+            export_scope = 'todos'
+        elif total_filtrados == 1:
+            auditorias_export = auditorias_qs
+            export_scope = 'unico'
+        else:
+            paginator = Paginator(auditorias_qs, per_page)
+            page_obj = paginator.get_page(current_page)
+            auditorias_export = page_obj.object_list
+            export_scope = f'pagina_{current_page}'
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = 'Auditorias'
+        header_fill = PatternFill(start_color='DC2626', end_color='DC2626', fill_type='solid')
+        header_font = Font(bold=True, color='FFFFFF', size=12)
+        border = Border(
+            left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin')
+        )
+        headers = ['Fecha/Hora', 'Acción', 'Entidad', 'Detalle', 'Usuario']
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num)
+            cell.value = header
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+            cell.border = border
+        for row_num, audit in enumerate(auditorias_export, 2):
+            ws.cell(row=row_num, column=1).value = audit.fecha_hora.strftime('%Y-%m-%d %H:%M')
+            ws.cell(row=row_num, column=2).value = audit.accion
+            ws.cell(row=row_num, column=3).value = audit.entidad
+            ws.cell(row=row_num, column=4).value = audit.detalle
+            ws.cell(row=row_num, column=5).value = audit.usuario.nombre if audit.usuario else 'Sistema'
+            for col_num in range(1, len(headers) + 1):
+                ws.cell(row=row_num, column=col_num).border = border
+                ws.cell(row=row_num, column=col_num).alignment = Alignment(vertical='center')
+        column_widths = [20, 12, 18, 50, 22]
+        for col_num, width in enumerate(column_widths, 1):
+            ws.column_dimensions[openpyxl.utils.get_column_letter(col_num)].width = width
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        from datetime import datetime
+        fecha_actual = datetime.now().strftime('%Y%m%d_%H%M%S')
+        response['Content-Disposition'] = f'attachment; filename=auditorias_{export_scope}_{fecha_actual}.xlsx'
+        wb.save(response)
+        return response
+    except Exception as e:
+        import traceback
+        print(f"Error exportando auditorias: {traceback.format_exc()}")
+        return JsonResponse({'success': False, 'message': f'Error al exportar: {str(e)}'}, status=500)
 
 @login_required
 @never_cache
