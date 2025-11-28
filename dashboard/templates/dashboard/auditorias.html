@@ -1,0 +1,154 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Auditoría del Sistema - Dulcería Lilis{% endblock %}
+
+{% block extra_css %}
+<style>
+    .audit-table { font-size: 0.9rem; }
+    .audit-icon { font-size: 1.2rem; }
+    .audit-detail { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .filter-section { background: var(--lilis-gray-50); border-radius: 10px; padding: 1rem; margin-bottom: 1.5rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">
+                <i class="bi bi-clock-history text-lilis-blue me-2"></i>
+                Auditoría del Sistema
+            </h2>
+            <p class="text-muted mb-0">Historial completo de actividades registradas</p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-primary-light text-primary fs-6">{{ total }} registros totales</span>
+        </div>
+    </div>
+
+    <div class="filter-section">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Acción</label>
+                <select name="accion" class="form-select form-select-sm">
+                    <option value="">Todas</option>
+                    <option value="CREAR" {% if request.GET.accion == 'CREAR' %}selected{% endif %}>Creación</option>
+                    <option value="EDITAR" {% if request.GET.accion == 'EDITAR' %}selected{% endif %}>Edición</option>
+                    <option value="BORRAR" {% if request.GET.accion == 'BORRAR' %}selected{% endif %}>Eliminación</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Entidad</label>
+                <input type="text" name="entidad" class="form-control form-control-sm" placeholder="Ej: Usuario, Producto..." value="{{ request.GET.entidad }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Usuario</label>
+                <input type="number" name="usuario" class="form-control form-control-sm" placeholder="ID de usuario" value="{{ request.GET.usuario }}">
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary btn-sm me-2"><i class="bi bi-funnel me-1"></i>Filtrar</button>
+                <a href="{% url 'dashboard:auditorias' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-circle me-1"></i>Limpiar</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="lilis-card">
+        <div class="lilis-card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover audit-table mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:50px"></th>
+                            <th>Fecha y Hora</th>
+                            <th>Acción</th>
+                            <th>Entidad</th>
+                            <th>Detalle</th>
+                            <th>Usuario</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if page_obj %}
+                            {% for actividad in page_obj %}
+                            <tr>
+                                <td class="text-center">
+                                    {% if actividad.accion == 'CREAR' %}
+                                        <i class="bi bi-plus-circle text-success audit-icon"></i>
+                                    {% elif actividad.accion == 'EDITAR' %}
+                                        <i class="bi bi-pencil-square text-primary audit-icon"></i>
+                                    {% elif actividad.accion == 'BORRAR' %}
+                                        <i class="bi bi-trash text-danger audit-icon"></i>
+                                    {% else %}
+                                        <i class="bi bi-info-circle text-info audit-icon"></i>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ actividad.fecha_hora|date:"d/m/Y H:i" }}<br><span style="font-size:.75rem">{{ actividad.fecha_hora|timesince }} atrás</span></small>
+                                </td>
+                                <td>
+                                    {% if actividad.accion == 'CREAR' %}
+                                        <span class="badge bg-success">Creación</span>
+                                    {% elif actividad.accion == 'EDITAR' %}
+                                        <span class="badge bg-primary">Edición</span>
+                                    {% elif actividad.accion == 'BORRAR' %}
+                                        <span class="badge bg-danger">Eliminación</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ actividad.accion }}</span>
+                                    {% endif %}
+                                </td>
+                                <td><span class="fw-semibold">{{ actividad.entidad }}</span></td>
+                                <td><span class="audit-detail" title="{{ actividad.detalle }}">{{ actividad.detalle }}</span></td>
+                                <td>
+                                    {% if actividad.usuario %}
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle me-2" style="width:28px;height:28px;background:var(--lilis-blue-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--lilis-blue);font-weight:600;font-size:.7rem;">
+                                            {{ actividad.usuario.nombre.0|default:actividad.usuario.username.0|upper }}
+                                        </div>
+                                        <small>{{ actividad.usuario.nombre|default:actividad.usuario.username }}</small>
+                                    </div>
+                                    {% else %}
+                                        <small class="text-muted">Sistema</small>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="bi bi-inbox display-4 d-block mb-3" style="color: var(--lilis-gray-300);"></i>
+                                        <p>No hay registros de auditoría</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% if page_obj.has_other_pages %}
+        <div class="lilis-card-footer">
+            <nav aria-label="Paginación de auditorías">
+                <ul class="pagination pagination-sm justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page=1{% if request.GET.accion %}&accion={{ request.GET.accion }}{% endif %}{% if request.GET.entidad %}&entidad={{ request.GET.entidad }}{% endif %}{% if request.GET.usuario %}&usuario={{ request.GET.usuario }}{% endif %}"><i class="bi bi-chevron-double-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.accion %}&accion={{ request.GET.accion }}{% endif %}{% if request.GET.entidad %}&entidad={{ request.GET.entidad }}{% endif %}{% if request.GET.usuario %}&usuario={{ request.GET.usuario }}{% endif %}"><i class="bi bi-chevron-left"></i></a></li>
+                    {% endif %}
+                    <li class="page-item active"><span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+                    {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.accion %}&accion={{ request.GET.accion }}{% endif %}{% if request.GET.entidad %}&entidad={{ request.GET.entidad }}{% endif %}{% if request.GET.usuario %}&usuario={{ request.GET.usuario }}{% endif %}"><i class="bi bi-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.accion %}&accion={{ request.GET.accion }}{% endif %}{% if request.GET.entidad %}&entidad={{ request.GET.entidad }}{% endif %}{% if request.GET.usuario %}&usuario={{ request.GET.usuario }}{% endif %}"><i class="bi bi-chevron-double-right"></i></a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    console.log('Auditorías cargadas: {{ total }}');
+</script>
+{% endblock %}
