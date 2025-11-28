@@ -172,17 +172,58 @@ def editar_proveedor(request, proveedor_id):
 
 @login_required
 def exportar_proveedores_excel(request):
-    """Exporta proveedores (respetando filtros actuales) a Excel"""
+    """Exporta proveedores respetando filtros y paginación actual.
+
+    Comportamiento:
+    - Si ?all=true se exportan TODOS los proveedores filtrados.
+    - Si la búsqueda (search) devuelve exactamente 1 proveedor, se exporta solo ese registro.
+    - En caso contrario se exporta SOLO la página actual (según ?page y ?per_page).
+    """
     # Solo administradores pueden acceder
     user = request.user
     if not (user.is_superuser or (hasattr(user, 'id_rol') and user.id_rol.nombre == 'Administrador')):
         return JsonResponse({'success': False, 'message': 'No tienes permisos'}, status=403)
 
-    # Filtros: actualmente soportamos 'search' por nombre/RUT
-    search = request.GET.get('search', '')
-    proveedores_qs = Proveedor.objects.all().order_by('-id_proveedor')
+    # Filtros (search por nombre/RUT)
+    search = request.GET.get('search', '').strip()
+    proveedores_base = Proveedor.objects.all().order_by('-id_proveedor')
     if search:
-        proveedores_qs = proveedores_qs.filter(nombre__icontains=search) | proveedores_qs.filter(rut_nif__icontains=search)
+        proveedores_base = proveedores_base.filter(nombre__icontains=search) | proveedores_base.filter(rut_nif__icontains=search)
+
+    total_filtrados = proveedores_base.count()
+
+    # Parámetros de paginación
+    per_page_param = request.GET.get('per_page')
+    try:
+        per_page = int(per_page_param) if per_page_param else request.session.get('proveedores_per_page', 10)
+    except ValueError:
+        per_page = 10
+    if isinstance(per_page, str):
+        try:
+            per_page = int(per_page)
+        except ValueError:
+            per_page = 10
+
+    page_param = request.GET.get('page', '1')
+    try:
+        current_page = int(page_param)
+    except ValueError:
+        current_page = 1
+
+    export_all = request.GET.get('all', 'false').lower() in ['true', '1', 'yes']
+
+    # Decidir subconjunto a exportar
+    if export_all:
+        proveedores_export = proveedores_base
+        export_scope = 'todos'
+    elif total_filtrados == 1:
+        proveedores_export = proveedores_base
+        export_scope = 'unico'
+    else:
+        paginator = Paginator(proveedores_base, per_page)
+        page_obj = paginator.get_page(current_page)
+        proveedores_export = page_obj.object_list
+        export_scope = f'pagina_{current_page}'
 
     # Crear libro de Excel
     wb = openpyxl.Workbook()
@@ -210,7 +251,7 @@ def exportar_proveedores_excel(request):
         cell.border = border
 
     # Llenar datos
-    for row_num, prov in enumerate(proveedores_qs, 2):
+    for row_num, prov in enumerate(proveedores_export, 2):
         ws.cell(row=row_num, column=1).value = prov.id_proveedor
         ws.cell(row=row_num, column=2).value = prov.nombre
         ws.cell(row=row_num, column=3).value = prov.contacto or ''
@@ -232,7 +273,10 @@ def exportar_proveedores_excel(request):
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-    response['Content-Disposition'] = 'attachment; filename=proveedores.xlsx'
+    from datetime import datetime
+    fecha_actual = datetime.now().strftime('%Y%m%d_%H%M%S')
+    nombre_archivo = f'proveedores_{export_scope}_{fecha_actual}.xlsx'
+    response['Content-Disposition'] = f'attachment; filename={nombre_archivo}'
     wb.save(response)
     return response
 
