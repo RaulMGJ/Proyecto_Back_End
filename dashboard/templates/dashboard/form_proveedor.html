@@ -646,16 +646,23 @@
                 }, 5000);
                 
             } else {
-                // Manejar errores
+                // Manejar errores con detalle del backend
                 console.error('Error al crear proveedor:', data.errors);
-                
+                let detalle = '';
+                if (data.errors) {
+                    // Construir lista de errores legibles
+                    for (const [campo, msgs] of Object.entries(data.errors)) {
+                        const texto = Array.isArray(msgs) ? msgs.join(' \n') : msgs;
+                        detalle += `- ${campo}: ${texto}\n`;
+                    }
+                }
+
                 const alertDiv = document.createElement('div');
                 alertDiv.className = 'alert alert-danger alert-dismissible fade show';
                 alertDiv.innerHTML = `
-                    Error al crear el proveedor. Por favor verifica los datos.
+                    Error al crear el proveedor. ${detalle ? '<pre class="mb-0">'+detalle+'</pre>' : 'Por favor verifica los datos.'}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 `;
-                
                 const form = document.querySelector('.p-4');
                 form.insertBefore(alertDiv, form.firstChild);
             }

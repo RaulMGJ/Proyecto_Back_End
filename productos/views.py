@@ -87,7 +87,8 @@ def lista_productos(request):
         'order_direction': order_direction,
         'per_page': per_page,
         'total_productos': Producto.objects.count(),
-        'productos_activos': Producto.objects.filter(activo=True).count(),
+        # El modelo Producto no tiene campo 'activo'; usar total como aproximación
+        'productos_activos': Producto.objects.count(),
     }
     return render(request, 'dashboard/productos.html', context)
 
