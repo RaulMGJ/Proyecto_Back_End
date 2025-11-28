@@ -204,77 +204,35 @@ def home(request):
 
 @login_required
 def auditorias_view(request):
-    """Vista de lista completa de auditorías con búsqueda, orden, paginación y per_page persistente"""
-    auditorias_qs = Auditoria.objects.select_related('usuario').all()
-
-    # Filtros específicos legacy
-    accion = request.GET.get('accion', '')
-    entidad = request.GET.get('entidad', '').strip()
-    usuario_id = request.GET.get('usuario', '').strip()
-
+    """Vista de lista completa de auditorías"""
+    auditorias = Auditoria.objects.select_related('usuario').order_by('-fecha_hora')
+    
+    # Filtros opcionales
+    accion = request.GET.get('accion')
+    entidad = request.GET.get('entidad')
+    usuario_id = request.GET.get('usuario')
+    
     if accion:
-        auditorias_qs = auditorias_qs.filter(accion=accion)
+        auditorias = auditorias.filter(accion=accion)
     if entidad:
-        auditorias_qs = auditorias_qs.filter(entidad__icontains=entidad)
+        auditorias = auditorias.filter(entidad__icontains=entidad)
     if usuario_id:
-        auditorias_qs = auditorias_qs.filter(usuario_id=usuario_id)
-
-    # Búsqueda global (search) sobre entidad, detalle, accion y nombre/username de usuario
-    search = (request.GET.get('search') or '').strip()
-    if search:
-        from django.db.models import Q
-        auditorias_qs = auditorias_qs.filter(
-            Q(entidad__icontains=search) |
-            Q(detalle__icontains=search) |
-            Q(accion__icontains=search) |
-            Q(usuario__nombre__icontains=search) |
-            Q(usuario__username__icontains=search)
-        )
-
-    # Ordenamiento seguro
-    order_by = request.GET.get('order_by', 'fecha_hora')
-    order_direction = request.GET.get('order_direction', 'desc')
-    allowed_fields = {'fecha_hora', 'accion', 'entidad'}  # usuario (nombre) se ordena vía anotación opcional
-    if order_by not in allowed_fields:
-        order_by = 'fecha_hora'
-    order_field = f'-{order_by}' if order_direction == 'desc' else order_by
-    auditorias_qs = auditorias_qs.order_by(order_field)
-
-    # per_page persistente en sesión
-    per_page_param = request.GET.get('per_page')
-    if per_page_param:
-        try:
-            per_page = int(per_page_param)
-        except ValueError:
-            per_page = 50
-        request.session['auditorias_per_page'] = per_page
-    else:
-        per_page = request.session.get('auditorias_per_page', 50)
-        if isinstance(per_page, str):
-            try:
-                per_page = int(per_page)
-            except ValueError:
-                per_page = 50
-
-    paginator = Paginator(auditorias_qs, per_page)
-    page_number = request.GET.get('page', 1)
+        auditorias = auditorias.filter(usuario_id=usuario_id)
+    
+    # Paginación
+    from django.core.paginator import Paginator
+    paginator = Paginator(auditorias, 50)
+    page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-
+    
     context = {
         'page_obj': page_obj,
-        'total': auditorias_qs.count(),
-        'accion': accion,
-        'entidad': entidad,
-        'usuario_filtro': usuario_id,
-        'search': search,
-        'order_by': order_by,
-        'order_direction': order_direction,
-        'per_page': per_page,
+        'total': auditorias.count(),
     }
+    
     return render(request, 'dashboard/auditorias.html', context)
 
-@login_required
-def exportar_auditorias_excel(request):
+
     """Exportar auditorías respetando filtros, búsqueda, orden y paginación.
 
     Parámetros:
