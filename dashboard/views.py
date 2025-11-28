@@ -15,6 +15,7 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from dashboard.models import Auditoria
 
 # --- API para eliminar producto ---
 @login_required
@@ -70,7 +71,6 @@ from productos.models import Producto
 from inventarios.models import Inventario
 from usuarios.models import Usuario, PasswordResetToken
 from .forms import ProductoForm, InventarioForm
-from .models import Auditoria
 
 @never_cache
 @sensitive_post_parameters('password')
@@ -194,6 +194,10 @@ def home(request):
             'proveedores_count': 12,  # Ficticio
             'ventas_count': 156,      # Ficticio
         })
+    
+    # Cargar actividades recientes de auditoría
+    actividades_recientes = Auditoria.objects.select_related('usuario').order_by('-fecha_hora')[:10]
+    context['actividades_recientes'] = actividades_recientes
     
     return render(request, 'dashboard/home.html', context)
 
