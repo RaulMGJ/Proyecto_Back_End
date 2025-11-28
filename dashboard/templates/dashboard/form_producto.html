@@ -358,10 +358,10 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row">
-        <!-- Formulario de Producto (Lado Izquierdo) -->
-        <div class="col-md-6">
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <!-- Formulario de Producto centrado -->
+        <div class="col-lg-8 col-md-10">
             <div class="form-container">
                 <div class="form-header">
                     <h5 class="mb-0 d-flex align-items-center">
@@ -371,16 +371,14 @@
                 </div>
                 
                 <div class="p-4">
-                    <!-- Alert Container -->
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
-                                <i class="bi bi-check-circle-fill me-2"></i>
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
+                    <!-- Alert Container (convertido a SweetAlert en JS) -->
+                    <div id="djangoMessages" class="d-none">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div data-level="{{ message.tags|default:'info' }}">{{ message|escape }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
 
                     <!-- Pasos del formulario -->
                     <div class="form-steps">
@@ -459,6 +457,17 @@
                                     <i class="bi bi-building me-1"></i>Marca <span class="text-muted">(opcional)</span>
                                 </label>
                                 <input type="text" class="form-input" name="marca" placeholder="Marca del producto">
+                            </div>
+
+                            <!-- Campo obligatorio del modelo -->
+                            <div class="form-field">
+                                <label class="form-label">
+                                    <i class="bi bi-basket me-1"></i>Unidad de Medida <span class="text-danger">*</span>
+                                </label>
+                                {{ form.unidad_medida }}
+                                {% if form.unidad_medida.errors %}
+                                    <div class="text-danger small mt-1">{{ form.unidad_medida.errors.0 }}</div>
+                                {% endif %}
                             </div>
                         </div>
 
@@ -849,6 +858,18 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        // Mostrar mensajes de Django como SweetAlert
+        const msgContainer = document.getElementById('djangoMessages');
+        if (msgContainer) {
+            const items = msgContainer.querySelectorAll('div[data-level]');
+            items.forEach(el => {
+                const level = (el.getAttribute('data-level') || 'info').toLowerCase();
+                const iconMap = {success:'success', info:'info', warning:'warning', error:'error'};
+                const icon = iconMap[level] || 'info';
+                const text = el.textContent;
+                Swal.fire({ icon, title: text, confirmButtonColor: '#dc2626' });
+            });
+        }
 
         // Event listeners para los pasos (permitir click solo en pasos completados)
         document.querySelectorAll('[data-action="showStep"]').forEach(step => {
@@ -989,16 +1010,6 @@
         
         // Inicializar botones
         updateNavigationButtons();
-
-        // Auto-cerrar alertas
-        setTimeout(() => {
-            document.querySelectorAll('.alert').forEach(alert => {
-                const closeBtn = alert.querySelector('.btn-close');
-                if (closeBtn) {
-                    closeBtn.click();
-                }
-            });
-        }, 5000);
 
         // Animación de entrada para las filas de productos
         const productItems = document.querySelectorAll('.product-item');
