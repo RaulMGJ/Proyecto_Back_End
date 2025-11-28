@@ -54,45 +54,83 @@
     <!-- Alert Container -->
     <div class="alert-container mb-3"></div>
     
-    <!-- Filters Card -->
-    <div class="lilis-card mb-4">
-        <div class="lilis-card-body">
-            <h5 class="card-title mb-3">
-                <i class="bi bi-funnel me-2"></i>
-                Filtros de búsqueda
-            </h5>
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="lilis-form-label">Buscar por nombre:</label>
-                    <input type="text" class="lilis-form-control" id="searchName" placeholder="Nombre del usuario">
-                </div>
-                <div class="col-md-3">
-                    <label class="lilis-form-label">Rol:</label>
-                    <select class="lilis-form-control" id="filterRole">
-                        <option value="">Todos</option>
-                        <option value="ADMIN">Administrador</option>
-                        <option value="AUDITOR">Auditor</option>
-                        <option value="OPERADOR">Operador</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="lilis-form-label">Estado:</label>
-                    <select class="lilis-form-control" id="filterStatus">
-                        <option value="">Todos</option>
-                        <option value="ACTIVO">Activo</option>
-                        <option value="BLOQUEADO">Bloqueado</option>
-                        <option value="INACTIVO">Inactivo</option>
-                    </select>
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button class="btn btn-lilis-secondary w-100" onclick="clearFilters()">
-                        <i class="bi bi-arrow-clockwise me-1"></i>
-                        Limpiar
-                    </button>
+        <!-- Filters Card (modo productos) -->
+        <div class="lilis-card mb-4">
+            <div class="lilis-card-body">
+                <h5 class="mb-3">
+                    <i class="bi bi-search me-2"></i>
+                    Buscar usuarios
+                </h5>
+                <form method="get" id="searchForm">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold mb-2">
+                                <i class="bi bi-filter me-1"></i>
+                                Buscar por usuario, nombre o email
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" name="search" id="searchUser" placeholder="Escribe para buscar..." value="{{ search }}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold mb-2">
+                                <i class="bi bi-list-ol me-1"></i>
+                                Registros por página
+                            </label>
+                            <select class="form-select" id="perPageSelect" name="per_page" onchange="changePerPage(this.value)">
+                                <option value="5" {% if per_page == 5 %}selected{% endif %}>5</option>
+                                <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                                <option value="15" {% if per_page == 15 %}selected{% endif %}>15</option>
+                                <option value="30" {% if per_page == 30 %}selected{% endif %}>30</option>
+                                <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+                                <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold mb-2">
+                                <i class="bi bi-sort-alpha-down me-1"></i>
+                                Ordenar por
+                            </label>
+                            <select class="form-select" id="orderBySelect" name="order_by" onchange="changeOrderBy(this.value)">
+                                <option value="id_usuario" {% if order_by == 'id_usuario' %}selected{% endif %}>ID</option>
+                                <option value="username" {% if order_by == 'username' %}selected{% endif %}>Usuario</option>
+                                <option value="nombre" {% if order_by == 'nombre' %}selected{% endif %}>Nombre</option>
+                                <option value="email" {% if order_by == 'email' %}selected{% endif %}>Email</option>
+                                <option value="last_login" {% if order_by == 'last_login' %}selected{% endif %}>Último Acceso</option>
+                                <option value="date_joined" {% if order_by == 'date_joined' %}selected{% endif %}>Fecha Creación</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold mb-2">
+                                <i class="bi bi-arrow-down-up me-1"></i>
+                                Dirección
+                            </label>
+                            <button type="button" class="btn w-100" style="background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; font-weight: 600;" onclick="toggleOrderDirection()" id="orderDirectionBtn">
+                                <i class="bi bi-sort-{% if order_direction == 'desc' %}down{% else %}up{% endif %} me-2"></i>
+                                {% if order_direction == 'desc' %}Descendente{% else %}Ascendente{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                <div class="row mt-4 pt-3 border-top">
+                    <div class="col-md-6 d-flex align-items-center gap-2">
+                        <button class="btn btn-outline-success" onclick="exportToExcel()">
+                            <i class="bi bi-file-earmark-excel me-2"></i>Exportar a Excel
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="exportAllToExcel()" title="Exportar todos los resultados filtrados (ignora paginación)">
+                            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Exportar Todo
+                        </button>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <span class="text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Mostrando <strong>{{ usuarios.start_index }}</strong> - <strong>{{ usuarios.end_index }}</strong> de <strong>{{ usuarios.paginator.count }}</strong> usuarios
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
     
     <!-- Users Table -->
     <div class="lilis-card">
@@ -114,15 +152,15 @@
             <table class="table table-hover mb-0" id="usersTable">
                 <thead class="table-light">
                     <tr>
-                        <th scope="col">Usuario</th>
-                        <th scope="col">Email</th>
-                        <th scope="col">Nombre</th>
+                        <th scope="col" style="cursor:pointer" onclick="sortTable('username')">Usuario {% if order_by == 'username' %}<i class="bi bi-caret-{% if order_direction == 'desc' %}down{% else %}up{% endif %}-fill"></i>{% endif %}</th>
+                        <th scope="col" style="cursor:pointer" onclick="sortTable('email')">Email {% if order_by == 'email' %}<i class="bi bi-caret-{% if order_direction == 'desc' %}down{% else %}up{% endif %}-fill"></i>{% endif %}</th>
+                        <th scope="col" style="cursor:pointer" onclick="sortTable('nombre')">Nombre {% if order_by == 'nombre' %}<i class="bi bi-caret-{% if order_direction == 'desc' %}down{% else %}up{% endif %}-fill"></i>{% endif %}</th>
                         <th scope="col">Correo</th>
-                        <th scope="col">Teléfono</th>
+                        <th scope="col" style="cursor:pointer" onclick="sortTable('telefono')">Teléfono</th>
                         <th scope="col">Rol</th>
-                        <th scope="col">Estado</th>  
+                        <th scope="col" style="cursor:pointer" onclick="sortTable('is_active')">Estado</th>  
                         <th scope="col">Cambio Clave</th>
-                        <th scope="col">Última Sesión</th>
+                        <th scope="col" style="cursor:pointer" onclick="sortTable('last_login')">Última Sesión {% if order_by == 'last_login' %}<i class="bi bi-caret-{% if order_direction == 'desc' %}down{% else %}up{% endif %}-fill"></i>{% endif %}</th>
                         <th scope="col">Acciones</th>
                     </tr>
                 </thead>
@@ -194,50 +232,44 @@
                 </tbody>
             </table>
         </div>
-        <div class="card-footer bg-light">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <form method="get" class="d-flex align-items-center gap-2">
-                    {% if search %}
-                    <input type="hidden" name="search" value="{{ search }}">
-                    {% endif %}
-                    <label class="mb-0">Registros por página:</label>
-                    <select name="per_page" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
-                        <option value="5" {% if per_page == 5 %}selected{% endif %}>5</option>
-                        <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
-                        <option value="15" {% if per_page == 15 %}selected{% endif %}>15</option>
-                        <option value="30" {% if per_page == 30 %}selected{% endif %}>30</option>
-                        <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
-                        <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
-                    </select>
-                </form>
-                {% if usuarios.has_other_pages %}
-                <nav aria-label="Usuarios pagination">
-                    <ul class="pagination pagination-sm mb-0">
-                        {% if usuarios.has_previous %}
-                            <li class="page-item"><a class="page-link" href="?page={{ usuarios.previous_page_number }}&per_page={{ per_page }}{% if search %}&search={{ search|urlencode }}{% endif %}">&laquo;</a></li>
-                        {% else %}
-                            <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
-                        {% endif %}
-                        {% for num in usuarios.paginator.page_range %}
-                            {% if usuarios.number == num %}
-                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                            {% elif num > usuarios.number|add:'-3' and num < usuarios.number|add:'3' %}
-                                <li class="page-item"><a class="page-link" href="?page={{ num }}&per_page={{ per_page }}{% if search %}&search={{ search|urlencode }}{% endif %}">{{ num }}</a></li>
+                <div class="card-footer bg-light">
+                    <nav aria-label="Paginación de usuarios">
+                        <ul class="pagination pagination-sm justify-content-center mb-0">
+                            {% if usuarios.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if search %}&search={{ search|urlencode }}{% endif %}&per_page={{ per_page }}&order_by={{ order_by }}&order_direction={{ order_direction }}" title="Primera página">&laquo;&laquo;</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ usuarios.previous_page_number }}{% if search %}&search={{ search|urlencode }}{% endif %}&per_page={{ per_page }}&order_by={{ order_by }}&order_direction={{ order_direction }}" title="Anterior">&laquo;</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">&laquo;&laquo;</span></li>
+                                <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
                             {% endif %}
-                        {% endfor %}
-                        {% if usuarios.has_next %}
-                            <li class="page-item"><a class="page-link" href="?page={{ usuarios.next_page_number }}&per_page={{ per_page }}{% if search %}&search={{ search|urlencode }}{% endif %}">&raquo;</a></li>
-                        {% else %}
-                            <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
-                        {% endif %}
-                    </ul>
-                </nav>
-                {% endif %}
-            </div>
-            <div class="text-center mt-2">
-                <small class="text-muted">Página {{ usuarios.number }} de {{ usuarios.paginator.num_pages }}</small>
-            </div>
-        </div>
+                            {% for num in usuarios.paginator.page_range %}
+                                {% if usuarios.number == num %}
+                                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                {% elif num > usuarios.number|add:'-3' and num < usuarios.number|add:'3' %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ num }}{% if search %}&search={{ search|urlencode }}{% endif %}&per_page={{ per_page }}&order_by={{ order_by }}&order_direction={{ order_direction }}">{{ num }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+                            {% if usuarios.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ usuarios.next_page_number }}{% if search %}&search={{ search|urlencode }}{% endif %}&per_page={{ per_page }}&order_by={{ order_by }}&order_direction={{ order_direction }}" title="Siguiente">&raquo;</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ usuarios.paginator.num_pages }}{% if search %}&search={{ search|urlencode }}{% endif %}&per_page={{ per_page }}&order_by={{ order_by }}&order_direction={{ order_direction }}" title="Última página">&raquo;&raquo;</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                <li class="page-item disabled"><span class="page-link">&raquo;&raquo;</span></li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    <div class="text-center mt-2">
+                        <small class="text-muted">Página {{ usuarios.number }} de {{ usuarios.paginator.num_pages }}</small>
+                    </div>
+                </div>
     </div>
 </div>
 
@@ -966,16 +998,61 @@
         });
     });
     
-    // Event listeners for filters
-    document.getElementById('searchName').addEventListener('input', liveSearch);
-    document.getElementById('filterRole').addEventListener('change', applyRoleStatusFilters);
-    document.getElementById('filterStatus').addEventListener('change', applyRoleStatusFilters);
-    
-    // Initialize
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('Usuario management loaded');
-        // Ejecutar búsqueda inicial (carga actual) para normalizar estructura
-        liveSearch();
-    });
+        // Nueva lógica de filtros (similar productos)
+        function changePerPage(value){
+            const url = new URL(window.location.href);
+            url.searchParams.set('per_page', value);
+            url.searchParams.set('page','1');
+            window.location.href = url.toString();
+        }
+        function changeOrderBy(value){
+            const url = new URL(window.location.href);
+            url.searchParams.set('order_by', value);
+            url.searchParams.set('page','1');
+            window.location.href = url.toString();
+        }
+        function toggleOrderDirection(){
+            const url = new URL(window.location.href);
+            const current = url.searchParams.get('order_direction') || 'desc';
+            url.searchParams.set('order_direction', current === 'desc' ? 'asc' : 'desc');
+            url.searchParams.set('page','1');
+            window.location.href = url.toString();
+        }
+        function sortTable(field){
+            const url = new URL(window.location.href);
+            const currentField = url.searchParams.get('order_by') || 'id_usuario';
+            const currentDir = url.searchParams.get('order_direction') || 'desc';
+            if(currentField === field){
+                url.searchParams.set('order_direction', currentDir === 'desc' ? 'asc' : 'desc');
+            } else {
+                url.searchParams.set('order_by', field);
+                url.searchParams.set('order_direction','desc');
+            }
+            url.searchParams.set('page','1');
+            window.location.href = url.toString();
+        }
+        // Auto submit search
+        document.addEventListener('DOMContentLoaded', function(){
+            let searchTimeout; const input = document.getElementById('searchUser');
+            if(input){
+                input.addEventListener('input', function(){
+                    clearTimeout(searchTimeout);
+                        searchTimeout = setTimeout(()=>{ document.getElementById('searchForm').submit(); }, 500);
+                });
+            }
+        });
+        function exportToExcel(){
+            const current = new URL(window.location.href);
+            const exportUrl = new URL('{% url "dashboard:exportar_usuarios_excel" %}', window.location.origin);
+            exportUrl.search = current.search;
+            window.location.href = exportUrl.toString();
+        }
+        function exportAllToExcel(){
+            const current = new URL(window.location.href);
+            const exportUrl = new URL('{% url "dashboard:exportar_usuarios_excel" %}', window.location.origin);
+            current.searchParams.set('all','true');
+            exportUrl.search = current.searchParams.toString();
+            window.location.href = exportUrl.toString();
+        }
 </script>
 {% endblock %}

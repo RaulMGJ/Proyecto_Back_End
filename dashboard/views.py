@@ -828,13 +828,26 @@ def usuarios_view(request):
     from roles.models import Rol
     usuarios_qs = Usuario.objects.select_related('id_rol').all()
 
-    # Live search: buscar por username, nombre o email
+    # Búsqueda: por username, nombre o email
     search = (request.GET.get('search') or '').strip()
     if search:
         from django.db.models import Q
         usuarios_qs = usuarios_qs.filter(
             Q(username__icontains=search) | Q(nombre__icontains=search) | Q(email__icontains=search)
         )
+
+    # Ordenamiento similar a productos
+    order_by = request.GET.get('order_by', 'id_usuario')
+    order_direction = request.GET.get('order_direction', 'desc')
+    # Campos permitidos para evitar abusos
+    allowed_fields = {'id_usuario', 'username', 'nombre', 'email', 'last_login', 'date_joined'}
+    if order_by not in allowed_fields:
+        order_by = 'id_usuario'
+    if order_direction == 'desc':
+        order_field = f'-{order_by}' if not order_by.startswith('-') else order_by
+    else:
+        order_field = order_by.replace('-', '')
+    usuarios_qs = usuarios_qs.order_by(order_field)
     roles = Rol.objects.all()
     
     # Paginación - obtener de sesión o de parámetro GET
@@ -849,31 +862,6 @@ def usuarios_view(request):
     paginator = Paginator(usuarios_qs, per_page)
     page = request.GET.get('page', 1)
     usuarios = paginator.get_page(page)
-    # Respuesta JSON para solicitudes AJAX (live search)
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        # Construir lista de usuarios serializados
-        data_usuarios = []
-        for u in usuarios:
-            data_usuarios.append({
-                'id': u.id_usuario,
-                'username': u.username,
-                'email': u.email,
-                'nombre': u.nombre,
-                'correo': getattr(u, 'correo', ''),
-                'telefono': u.telefono or '',
-                'rol': u.id_rol.nombre if u.id_rol else '',
-                'is_active': u.is_active,
-                'last_login': u.last_login.strftime('%d/%m/%Y %H:%M') if u.last_login else 'Nunca',
-                'debe_cambiar_clave': getattr(u, 'debe_cambiar_clave', False)
-            })
-        return JsonResponse({
-            'success': True,
-            'usuarios': data_usuarios,
-            'page': usuarios.number,
-            'num_pages': paginator.num_pages,
-            'total_filtrados': usuarios_qs.count(),
-            'search': search,
-        })
 
     context = {
         'usuarios': usuarios,
@@ -885,6 +873,8 @@ def usuarios_view(request):
         'user': request.user,
         'per_page': per_page,
         'search': search,
+        'order_by': order_by,
+        'order_direction': order_direction,
     }
     return render(request, 'dashboard/usuarios.html', context)
 
@@ -1344,7 +1334,17 @@ def cambiar_estado_usuario(request, usuario_id):
 
 @login_required
 def exportar_usuarios_excel(request):
-    """Exportar lista de usuarios a Excel"""
+    """Exportar lista de usuarios respetando filtros y paginación.
+
+    Parámetros soportados:
+    - search: filtro por username, nombre, email
+    - order_by: campo de orden (id_usuario, username, nombre, email, last_login, date_joined)
+    - order_direction: asc|desc
+    - per_page: tamaño de página
+    - page: número de página
+    - all=true: exporta todos los registros filtrados ignorando paginación
+    - Si el filtro da exactamente 1 resultado y all!=true, se exporta solo ese registro
+    """
     user = request.user
     
     # Solo administradores pueden acceder
@@ -1353,7 +1353,59 @@ def exportar_usuarios_excel(request):
     
     try:
         from usuarios.models import Usuario
-        
+
+        # Query base
+        usuarios_qs = Usuario.objects.select_related('id_rol').all()
+
+        # Filtro búsqueda
+        search = (request.GET.get('search') or '').strip()
+        if search:
+            from django.db.models import Q
+            usuarios_qs = usuarios_qs.filter(
+                Q(username__icontains=search) | Q(nombre__icontains=search) | Q(email__icontains=search)
+            )
+
+        # Ordenamiento
+        order_by = request.GET.get('order_by', 'id_usuario')
+        order_direction = request.GET.get('order_direction', 'desc')
+        allowed_fields = {'id_usuario', 'username', 'nombre', 'email', 'last_login', 'date_joined'}
+        if order_by not in allowed_fields:
+            order_by = 'id_usuario'
+        order_field = f'-{order_by}' if order_direction == 'desc' else order_by.replace('-', '')
+        usuarios_qs = usuarios_qs.order_by(order_field)
+
+        total_filtrados = usuarios_qs.count()
+
+        # Paginación
+        per_page_param = request.GET.get('per_page')
+        try:
+            per_page = int(per_page_param) if per_page_param else request.session.get('usuarios_per_page', 10)
+        except ValueError:
+            per_page = 10
+        if isinstance(per_page, str):
+            try:
+                per_page = int(per_page)
+            except ValueError:
+                per_page = 10
+        page_param = request.GET.get('page', '1')
+        try:
+            current_page = int(page_param)
+        except ValueError:
+            current_page = 1
+
+        export_all = request.GET.get('all', 'false').lower() in ['true','1','yes']
+        if export_all:
+            usuarios_export = usuarios_qs
+            export_scope = 'todos'
+        elif total_filtrados == 1:
+            usuarios_export = usuarios_qs
+            export_scope = 'unico'
+        else:
+            paginator = Paginator(usuarios_qs, per_page)
+            page_obj = paginator.get_page(current_page)
+            usuarios_export = page_obj.object_list
+            export_scope = f'pagina_{current_page}'
+
         # Crear libro de Excel
         wb = openpyxl.Workbook()
         ws = wb.active
@@ -1379,11 +1431,8 @@ def exportar_usuarios_excel(request):
             cell.alignment = Alignment(horizontal='center', vertical='center')
             cell.border = border
         
-        # Obtener usuarios
-        usuarios = Usuario.objects.select_related('id_rol').all().order_by('-date_joined')
-        
         # Llenar datos
-        for row_num, usuario in enumerate(usuarios, 2):
+        for row_num, usuario in enumerate(usuarios_export, 2):
             ws.cell(row=row_num, column=1).value = usuario.id_usuario
             ws.cell(row=row_num, column=2).value = usuario.username
             ws.cell(row=row_num, column=3).value = usuario.email
@@ -1409,7 +1458,7 @@ def exportar_usuarios_excel(request):
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
         fecha_actual = datetime.now().strftime('%Y%m%d_%H%M%S')
-        response['Content-Disposition'] = f'attachment; filename=usuarios_{fecha_actual}.xlsx'
+        response['Content-Disposition'] = f'attachment; filename=usuarios_{export_scope}_{fecha_actual}.xlsx'
         
         # Guardar y devolver
         wb.save(response)
