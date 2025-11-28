@@ -578,34 +578,87 @@
         filterTable();
     }
     
-    function filterTable() {
-        const searchName = document.getElementById('searchName').value.toLowerCase();
+    // Renderizar tabla desde datos JSON
+    function renderUsers(data) {
+        const tbody = document.querySelector('#usersTable tbody');
+        tbody.innerHTML = '';
+        if (!data.usuarios || data.usuarios.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4"><div class="text-muted"><i class="bi bi-people display-4 d-block mb-3" style="color: var(--lilis-gray-300);"></i>No se encontraron usuarios</div></td></tr>`;
+            document.getElementById('userCount').textContent = '0 usuarios';
+            return;
+        }
+        data.usuarios.forEach(u => {
+            const estadoBadge = u.is_active ? '<span class="lilis-badge lilis-badge-success">ACTIVO</span>' : '<span class="lilis-badge lilis-badge-danger">INACTIVO</span>';
+            const lastLogin = u.last_login || 'Nunca';
+            const rowHtml = `
+            <tr data-user-id="${u.id}">
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-circle me-2" style="width:32px;height:32px;background:var(--lilis-blue-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--lilis-blue);font-weight:600;font-size:0.8rem;">${u.nombre ? u.nombre.charAt(0) : '?'}</div>
+                        <strong>${u.username}</strong>
+                    </div>
+                </td>
+                <td>${u.email}</td>
+                <td>${u.nombre}</td>
+                <td>${u.correo || ''}</td>
+                <td>${u.telefono || '-'}</td>
+                <td><span class="lilis-badge lilis-badge-info">${u.rol}</span></td>
+                <td>${estadoBadge}</td>
+                <td><small class="text-muted">${lastLogin}</small></td>
+                <td>
+                    <div class="user-actions">
+                        <button class="btn btn-outline-primary btn-sm" onclick="editUser('${u.id}')" title="Editar"><i class="bi bi-pencil"></i></button>
+                        ${u.is_active ? `<button class="btn btn-outline-warning btn-sm" onclick="toggleUserStatus('${u.id}', false)" title="Desactivar"><i class="bi bi-pause-circle"></i></button>` : `<button class="btn btn-outline-success btn-sm" onclick="toggleUserStatus('${u.id}', true)" title="Activar"><i class="bi bi-play-circle"></i></button>`}
+                        <button class="btn btn-lilis-danger btn-sm" onclick="deleteUser('${u.id}')" title="Eliminar"><i class="bi bi-trash"></i></button>
+                    </div>
+                </td>
+            </tr>`;
+            tbody.insertAdjacentHTML('beforeend', rowHtml);
+        });
+        document.getElementById('userCount').textContent = `${data.total_filtrados} usuarios`;
+        // Aplicar filtros de rol/estado cliente sobre resultado
+        applyRoleStatusFilters();
+    }
+
+    function applyRoleStatusFilters() {
         const filterRole = document.getElementById('filterRole').value;
         const filterStatus = document.getElementById('filterStatus').value;
-        
         const rows = document.querySelectorAll('#usersTable tbody tr');
-        let visibleCount = 0;
-        
+        let visible = 0;
         rows.forEach(row => {
-            if (row.cells.length === 1) return; // Skip empty row
-            
-            const name = row.cells[2].textContent.toLowerCase() + ' ' + row.cells[3].textContent.toLowerCase();
+            if (row.cells.length < 9) return;
             const role = row.cells[5].textContent.trim();
             const status = row.cells[6].textContent.trim();
-            
-            const matchName = !searchName || name.includes(searchName);
             const matchRole = !filterRole || role === filterRole;
             const matchStatus = !filterStatus || status === filterStatus;
-            
-            if (matchName && matchRole && matchStatus) {
+            if (matchRole && matchStatus) {
                 row.style.display = '';
-                visibleCount++;
+                visible++;
             } else {
                 row.style.display = 'none';
             }
         });
-        
-        document.getElementById('userCount').textContent = `${visibleCount} usuarios`;
+        document.getElementById('userCount').textContent = `${visible} usuarios`;
+    }
+
+    let searchTimeout = null;
+    function liveSearch() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const query = document.getElementById('searchName').value.trim();
+            const url = `/dashboard/usuarios/?search=${encodeURIComponent(query)}`;
+            fetch(url, {
+                method: 'GET',
+                headers: {'X-Requested-With': 'XMLHttpRequest'}
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    renderUsers(data);
+                }
+            })
+            .catch(err => console.error('Live search error:', err));
+        }, 300);
     }
     
     // Export function
@@ -797,13 +850,15 @@
     });
     
     // Event listeners for filters
-    document.getElementById('searchName').addEventListener('input', filterTable);
-    document.getElementById('filterRole').addEventListener('change', filterTable);
-    document.getElementById('filterStatus').addEventListener('change', filterTable);
+    document.getElementById('searchName').addEventListener('input', liveSearch);
+    document.getElementById('filterRole').addEventListener('change', applyRoleStatusFilters);
+    document.getElementById('filterStatus').addEventListener('change', applyRoleStatusFilters);
     
     // Initialize
     document.addEventListener('DOMContentLoaded', function() {
         console.log('Usuario management loaded');
+        // Ejecutar búsqueda inicial (carga actual) para normalizar estructura
+        liveSearch();
     });
 </script>
 {% endblock %}

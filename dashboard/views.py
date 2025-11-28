@@ -788,6 +788,14 @@ def usuarios_view(request):
     from usuarios.models import Usuario
     from roles.models import Rol
     usuarios_qs = Usuario.objects.select_related('id_rol').all()
+
+    # Live search: buscar por username, nombre o email
+    search = (request.GET.get('search') or '').strip()
+    if search:
+        from django.db.models import Q
+        usuarios_qs = usuarios_qs.filter(
+            Q(username__icontains=search) | Q(nombre__icontains=search) | Q(email__icontains=search)
+        )
     roles = Rol.objects.all()
     
     # Paginación - obtener de sesión o de parámetro GET
@@ -802,6 +810,31 @@ def usuarios_view(request):
     paginator = Paginator(usuarios_qs, per_page)
     page = request.GET.get('page', 1)
     usuarios = paginator.get_page(page)
+    # Respuesta JSON para solicitudes AJAX (live search)
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        # Construir lista de usuarios serializados
+        data_usuarios = []
+        for u in usuarios:
+            data_usuarios.append({
+                'id': u.id_usuario,
+                'username': u.username,
+                'email': u.email,
+                'nombre': u.nombre,
+                'correo': getattr(u, 'correo', ''),
+                'telefono': u.telefono or '',
+                'rol': u.id_rol.nombre if u.id_rol else '',
+                'is_active': u.is_active,
+                'last_login': u.last_login.strftime('%d/%m/%Y %H:%M') if u.last_login else 'Nunca'
+            })
+        return JsonResponse({
+            'success': True,
+            'usuarios': data_usuarios,
+            'page': usuarios.number,
+            'num_pages': paginator.num_pages,
+            'total_filtrados': usuarios_qs.count(),
+            'search': search,
+        })
+
     context = {
         'usuarios': usuarios,
         'roles': roles,
@@ -811,6 +844,7 @@ def usuarios_view(request):
         'nuevos_usuarios': 0,  # Mock data
         'user': request.user,
         'per_page': per_page,
+        'search': search,
     }
     return render(request, 'dashboard/usuarios.html', context)
 
