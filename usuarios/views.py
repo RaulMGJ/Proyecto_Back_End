@@ -166,9 +166,18 @@ def lista_usuarios(request):
     if search:
         usuarios = usuarios.filter(nombre__icontains=search) | usuarios.filter(correo__icontains=search)
     
-    # Paginación
-    paginator = Paginator(usuarios, 10)
-    page = request.GET.get('page')
+    # Paginación con selector de tamaño
+    per_page_param = request.GET.get('per_page')
+    if per_page_param:
+        per_page = int(per_page_param)
+        request.session['usuarios_per_page'] = per_page
+    else:
+        per_page = request.session.get('usuarios_per_page', 10)
+        if isinstance(per_page, str):
+            per_page = int(per_page)
+
+    paginator = Paginator(usuarios, per_page)
+    page = request.GET.get('page') or 1
     usuarios = paginator.get_page(page)
     
     context = {
@@ -176,6 +185,7 @@ def lista_usuarios(request):
         'search': search,
         'total_usuarios': Usuario.objects.count(),
         'usuarios_activos': Usuario.objects.filter(is_active=True).count(),
+        'per_page': per_page,
     }
     return render(request, 'dashboard/usuarios.html', context)
 
