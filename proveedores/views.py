@@ -141,7 +141,24 @@ def editar_proveedor(request, proveedor_id):
         if form.is_valid():
             proveedor = form.save()
             messages.success(request, f'Proveedor "{proveedor.nombre}" actualizado exitosamente.')
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'proveedor': {
+                        'id': proveedor.id_proveedor,
+                        'nombre': proveedor.nombre,
+                        'contacto': proveedor.contacto or '',
+                        'direccion': proveedor.direccion or '',
+                        'pais': proveedor.pais or '',
+                        'rut_nif': proveedor.rut_nif,
+                        'email': proveedor.email or '',
+                        'email_secundario': proveedor.email_secundario or ''
+                    }
+                })
             return redirect('proveedores:lista_proveedores')
+        else:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     else:
         form = ProveedorForm(instance=proveedor)
     
@@ -218,6 +235,27 @@ def exportar_proveedores_excel(request):
     response['Content-Disposition'] = 'attachment; filename=proveedores.xlsx'
     wb.save(response)
     return response
+
+@login_required
+def obtener_proveedor(request, proveedor_id):
+    """Devuelve datos de un proveedor específico en JSON (uso AJAX)."""
+    try:
+        proveedor = Proveedor.objects.get(pk=proveedor_id)
+        return JsonResponse({
+            'success': True,
+            'proveedor': {
+                'id': proveedor.id_proveedor,
+                'nombre': proveedor.nombre,
+                'contacto': proveedor.contacto or '',
+                'direccion': proveedor.direccion or '',
+                'pais': proveedor.pais or '',
+                'rut_nif': proveedor.rut_nif,
+                'email': proveedor.email or '',
+                'email_secundario': proveedor.email_secundario or ''
+            }
+        })
+    except Proveedor.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Proveedor no encontrado'}, status=404)
 
 @login_required
 def eliminar_proveedor(request, proveedor_id):

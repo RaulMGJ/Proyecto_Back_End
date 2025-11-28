@@ -339,6 +339,7 @@
                 
                 <form id="providerForm">
                     {% csrf_token %}
+                    <input type="hidden" name="provider_id" id="providerIdField">
                     
                     <!-- Step 1: Identificación y Contacto -->
                     <div class="step-content" data-step="1">
@@ -501,12 +502,65 @@
     
     // Provider Management Functions
     function viewProvider(providerId) {
-        LilisSystem.showAlert(`Viendo detalles del proveedor ${providerId}`, 'info');
+        Swal.fire({
+            title: 'Cargando proveedor...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => Swal.showLoading()
+        });
+        fetch(`/proveedores/obtener/${providerId}/`, {headers:{'X-Requested-With':'XMLHttpRequest'}})
+            .then(r => r.json())
+            .then(data => {
+                Swal.close();
+                if (!data.success) throw new Error(data.message || 'Error al obtener proveedor');
+                const p = data.proveedor;
+                Swal.fire({
+                    title: `<i class='bi bi-building me-2'></i>${p.nombre}`,
+                    html: `
+                        <div class='text-start'>
+                            <p><strong>RUT:</strong> ${p.rut_nif}</p>
+                            <p><strong>Contacto:</strong> ${p.contacto || '—'}</p>
+                            <p><strong>Email:</strong> ${p.email || '—'}</p>
+                            <p><strong>Email Secundario:</strong> ${p.email_secundario || '—'}</p>
+                            <p><strong>Dirección:</strong> ${p.direccion || '—'}</p>
+                            <p><strong>País:</strong> ${p.pais || '—'}</p>
+                        </div>
+                    `,
+                    confirmButtonColor: '#4F81F7'
+                });
+            })
+            .catch(err => {
+                Swal.fire({icon:'error',title:'Error',text:err.message,confirmButtonColor:'#4F81F7'});
+            });
     }
     
     function editProvider(providerId) {
-        LilisSystem.showAlert(`Editando proveedor ${providerId}`, 'info');
-        // Aquí cargarías los datos del proveedor en el modal
+        // Reiniciar a paso 1
+        currentStep = 1;
+        updateStepDisplay();
+        document.getElementById('providerForm').reset();
+        document.getElementById('providerIdField').value = providerId;
+        document.getElementById('modalTitle').textContent = 'Editar Proveedor';
+        const modal = new bootstrap.Modal(document.getElementById('providerModal'));
+        modal.show();
+        fetch(`/proveedores/obtener/${providerId}/`, {headers:{'X-Requested-With':'XMLHttpRequest'}})
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) throw new Error(data.message || 'Error al obtener proveedor');
+                const p = data.proveedor;
+                // Paso 1
+                setFieldValue('nombre', p.nombre);
+                setFieldValue('rut_nif', p.rut_nif);
+                setFieldValue('contacto', p.contacto);
+                setFieldValue('email', p.email);
+                setFieldValue('email_secundario', p.email_secundario);
+                // Paso 2
+                setFieldValue('direccion', p.direccion);
+                setFieldValue('pais', p.pais);
+            })
+            .catch(err => {
+                Swal.fire({icon:'error',title:'Error',text:err.message,confirmButtonColor:'#4F81F7'});
+            });
     }
     
     // Step Navigation Functions
@@ -637,18 +691,37 @@
     }
     
     function submitProvider() {
-        if (validateCurrentStep()) {
-            const formData = new FormData(document.getElementById('providerForm'));
-            
-            LilisSystem.showAlert('Guardando proveedor...', 'info');
-            
-            // Simular guardado
-            setTimeout(() => {
-                LilisSystem.showAlert('Proveedor guardado exitosamente', 'success');
-                bootstrap.Modal.getInstance(document.getElementById('providerModal')).hide();
-                resetProviderForm();
-            }, 1500);
+        if (!validateCurrentStep()) return;
+        // Verificar que se hayan completado todos los pasos antes de guardar
+        if (currentStep < totalSteps) {
+            Swal.fire({icon:'info',title:'Completa los pasos',text:'Avanza hasta el último paso antes de guardar',confirmButtonColor:'#4F81F7'});
+            return;
         }
+        const form = document.getElementById('providerForm');
+        const formData = new FormData(form);
+        const providerId = document.getElementById('providerIdField').value;
+        const url = providerId ? `/proveedores/editar/${providerId}/` : '/proveedores/agregar/';
+        Swal.fire({title:'Guardando...',allowOutsideClick:false,showConfirmButton:false,didOpen:()=>Swal.showLoading()});
+        fetch(url, {
+            method:'POST',
+            body: formData,
+            headers: {'X-Requested-With':'XMLHttpRequest','X-CSRFToken': getCookie('csrftoken')},
+        })
+        .then(r => r.json())
+        .then(data => {
+            Swal.close();
+            if(!data.success){
+                const errs = data.errors ? Object.values(data.errors).flat().join('\n') : (data.message||'Error desconocido');
+                Swal.fire({icon:'error',title:'Errores de validación',text:errs,confirmButtonColor:'#4F81F7'});
+                return;
+            }
+            Swal.fire({icon:'success',title:'Proveedor guardado',timer:1500,showConfirmButton:false});
+            setTimeout(()=>{ window.location.reload(); },1200);
+        })
+        .catch(err => {
+            Swal.close();
+            Swal.fire({icon:'error',title:'Error',text:err.message,confirmButtonColor:'#4F81F7'});
+        });
     }
     
     function resetProviderForm() {
@@ -657,6 +730,8 @@
         document.querySelectorAll('.is-invalid').forEach(field => {
             field.classList.remove('is-invalid');
         });
+        document.getElementById('providerIdField').value = '';
+        document.getElementById('modalTitle').textContent = 'Nuevo Proveedor';
         updateStepDisplay();
     }
     
@@ -694,6 +769,26 @@
         
         console.log('Provider management loaded');
     });
+
+    function setFieldValue(name, value){
+        const el = document.querySelector(`[name="${name}"]`);
+        if(el){ el.value = value || ''; }
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 </script>
 
 <style>
