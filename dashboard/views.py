@@ -242,6 +242,8 @@ def productos_view(request):
     rol_nombre = user.id_rol.nombre if hasattr(user, 'id_rol') and user.id_rol else None
     es_vendedor = rol_nombre == 'Vendedor'
     es_bodeguero = rol_nombre == 'Bodeguero'
+    es_cliente = rol_nombre == 'Cliente'
+    es_consulta = rol_nombre == 'Consulta'
     puede_crear_editar = user.is_superuser or rol_nombre in ['Administrador', 'Bodeguero']
     puede_eliminar = user.is_superuser or rol_nombre == 'Administrador'
     
@@ -295,6 +297,8 @@ def productos_view(request):
         'productos_activos': Producto.objects.count(),
         'es_vendedor': es_vendedor,
         'es_bodeguero': es_bodeguero,
+        'es_cliente': es_cliente,
+        'es_consulta': es_consulta,
         'puede_crear_editar': puede_crear_editar,
         'puede_eliminar': puede_eliminar,
     }
