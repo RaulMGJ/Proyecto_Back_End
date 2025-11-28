@@ -1012,7 +1012,7 @@ def guardar_usuario(request):
                 usuario=user,
                 accion='EDITAR',
                 entidad='Usuario',
-                detalle=f'ID: {usuario.id_usuario}, Nombre: {usuario.nombre}'
+                detalle=f'Reset pwd ID:{usuario.id_usuario}'
             )
             action = 'actualizado'
         else:
@@ -1055,7 +1055,7 @@ def guardar_usuario(request):
                 usuario=user,
                 accion='CREAR',
                 entidad='Usuario',
-                detalle=f'ID: {usuario.id_usuario}, Nombre: {usuario.nombre}'
+                detalle=f'Reset pwd ID:{usuario.id_usuario}'
             )
             action = 'creado'
             # Enviar correo con clave temporal
@@ -1202,9 +1202,9 @@ def reset_usuario_password(request, usuario_id):
         # Auditoría
         Auditoria.objects.create(
             usuario=user,
-            accion='RESET_PASSWORD',
+            accion='EDITAR',
             entidad='Usuario',
-            detalle=f'ID: {usuario.id_usuario}, Nombre: {usuario.nombre}'
+            detalle=f'Reset pwd ID:{usuario.id_usuario}'
         )
         
         # Enviar correo con clave temporal (F-RESET-ADMIN-02)
