@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
@@ -867,12 +868,37 @@ def guardar_usuario(request):
                 usuario.debe_cambiar_clave = True
                 usuario.save(update_fields=['password', 'debe_cambiar_clave'])
                 try:
+                    login_url = request.build_absolute_uri(reverse('dashboard:login'))
+                    html_message = (
+                        f"""
+                        <div style='font-family:Segoe UI, Arial, sans-serif; color:#111; line-height:1.5;'>
+                          <h2 style='margin:0 0 12px; color:#dc2626;'>Dulcería Lilis</h2>
+                          <p>Hola <strong>{usuario.nombre}</strong>,</p>
+                          <p>Se ha generado una clave temporal para tu cuenta.</p>
+                          <div style='background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:12px; margin:14px 0;'>
+                            <p style='margin:0;'><strong>Usuario:</strong> {usuario.username}</p>
+                            <p style='margin:6px 0 0;'><strong>Clave temporal:</strong> <code style='font-size:14px;'>{password}</code></p>
+                          </div>
+                          <p>Puedes ingresar desde este enlace:</p>
+                          <p><a href='{login_url}' style='background:#dc2626; color:#fff; padding:10px 14px; border-radius:6px; text-decoration:none;'>Ir al acceso</a></p>
+                          <p style='color:#6b7280; font-size:13px;'>Al ingresar se te pedirá cambiar la contraseña.</p>
+                        </div>
+                        """
+                    )
                     send_mail(
-                        subject='Clave temporal de acceso',
-                        message=f'Se ha generado una clave temporal para tu cuenta. Usuario: {usuario.username}\nClave temporal: {password}',
+                        subject='Dulcería Lilis - Clave temporal de acceso',
+                        message=(
+                            f'Hola {usuario.nombre},\n'
+                            f'Se ha generado una clave temporal para tu cuenta.\n'
+                            f'Usuario: {usuario.username}\n'
+                            f'Clave temporal: {password}\n\n'
+                            f'URL de acceso: {login_url}\n'
+                            'Al ingresar se te pedirá cambiar la contraseña.'
+                        ),
                         from_email=settings.DEFAULT_FROM_EMAIL,
                         recipient_list=[usuario.email],
                         fail_silently=True,
+                        html_message=html_message,
                     )
                 except Exception:
                     pass
@@ -931,12 +957,36 @@ def guardar_usuario(request):
             action = 'creado'
             # Enviar correo con clave temporal
             try:
+                login_url = request.build_absolute_uri(reverse('dashboard:login'))
+                html_message = (
+                    f"""
+                    <div style='font-family:Segoe UI, Arial, sans-serif; color:#111; line-height:1.5;'>
+                      <h2 style='margin:0 0 12px; color:#dc2626;'>Dulcería Lilis</h2>
+                      <p>Hola <strong>{usuario.nombre}</strong>,</p>
+                      <p>Se creó tu acceso al sistema. Aquí están tus credenciales temporales:</p>
+                      <div style='background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:12px; margin:14px 0;'>
+                        <p style='margin:0;'><strong>Usuario:</strong> {usuario.username}</p>
+                        <p style='margin:6px 0 0;'><strong>Clave temporal:</strong> <code style='font-size:14px;'>{temp_password}</code></p>
+                      </div>
+                      <p>Accede desde este enlace y cambia tu contraseña en el primer ingreso:</p>
+                      <p><a href='{login_url}' style='background:#dc2626; color:#fff; padding:10px 14px; border-radius:6px; text-decoration:none;'>Ir al acceso</a></p>
+                      <p style='color:#6b7280; font-size:13px;'>Si no solicitaste esta cuenta, ignora este correo.</p>
+                    </div>
+                    """
+                )
                 send_mail(
-                    subject='Tu acceso al sistema - clave temporal',
-                    message=f'Hola {usuario.nombre},\nTu usuario es: {usuario.username}\nTu clave temporal es: {temp_password}\nPor favor cámbiala en tu primer ingreso.',
+                    subject='Dulcería Lilis - Tu acceso y clave temporal',
+                    message=(
+                        f'Hola {usuario.nombre},\n'
+                        f'Tu usuario es: {usuario.username}\n'
+                        f'Tu clave temporal es: {temp_password}\n\n'
+                        f'URL de acceso: {login_url}\n'
+                        'Deberás cambiarla en tu primer ingreso.'
+                    ),
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[usuario.email],
                     fail_silently=True,
+                    html_message=html_message,
                 )
             except Exception:
                 pass
