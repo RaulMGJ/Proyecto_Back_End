@@ -179,9 +179,9 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='tu-app-password')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Seguridad de cookies de sesión
-SESSION_COOKIE_HTTPONLY = False
-SESSION_COOKIE_SECURE = False  # Solo si usas HTTPS en producción
-SESSION_COOKIE_SAMESITE = None  # O 'Strict' para máxima seguridad
+SESSION_COOKIE_HTTPONLY = True  # Protege contra XSS (JavaScript no puede acceder)
+SESSION_COOKIE_SECURE = False   # False porque usamos HTTP (sin HTTPS)
+SESSION_COOKIE_SAMESITE = None  # None para permitir autenticación cross-origin
 
 # --- IMPORTANTE ---
 # Cuando pongas el sitio en producción con HTTPS, cambia a:
