@@ -719,6 +719,7 @@ def usuarios_view(request):
     from roles.models import Rol
     usuarios_qs = Usuario.objects.select_related('id_rol').all()
     roles = Rol.objects.all()
+    
     # Paginación - obtener de sesión o de parámetro GET
     per_page_param = request.GET.get('per_page')
     if per_page_param:
@@ -734,9 +735,9 @@ def usuarios_view(request):
     context = {
         'usuarios': usuarios,
         'roles': roles,
-        'usuarios_count': usuarios_qs.count(),
-        'usuarios_activos': usuarios_qs.filter(is_active=True).count(),
-        'usuarios_inactivos': usuarios_qs.filter(is_active=False).count(),
+        'usuarios_count': Usuario.objects.count(),
+        'usuarios_activos': Usuario.objects.filter(is_active=True).count(),
+        'usuarios_inactivos': Usuario.objects.filter(is_active=False).count(),
         'nuevos_usuarios': 0,  # Mock data
         'user': request.user,
         'per_page': per_page,
