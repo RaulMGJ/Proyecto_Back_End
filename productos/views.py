@@ -29,11 +29,12 @@ class ProductoForm(forms.ModelForm):
     
     class Meta:
         model = Producto
-        fields = ['nombre', 'descripcion', 'precio_referencia']
+        fields = ['nombre', 'descripcion', 'precio_referencia', 'unidad_medida']
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Nombre del producto'}),
             'descripcion': forms.Textarea(attrs={'class': 'form-input', 'placeholder': 'Descripción del producto', 'rows': 3}),
             'precio_referencia': forms.NumberInput(attrs={'class': 'form-input', 'placeholder': '0', 'min': '0'}),
+            'unidad_medida': forms.Select(attrs={'class': 'form-input'}),
         }
 
 @login_required
