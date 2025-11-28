@@ -633,6 +633,38 @@ def reset_password_view(request):
     """Vista para resetear contraseña con token"""
     token_str = request.GET.get('token') or request.POST.get('token')
     
+    # Flujo de primer ingreso: usuario autenticado con debe_cambiar_clave=True sin token
+    if not token_str and request.user.is_authenticated:
+        usuario = request.user
+        if hasattr(usuario, 'debe_cambiar_clave') and usuario.debe_cambiar_clave:
+            if request.method == 'POST':
+                password = (request.POST.get('password') or '').strip()
+                password_confirm = (request.POST.get('password_confirm') or '').strip()
+                # Validaciones básicas de contraseña
+                if password != password_confirm:
+                    messages.error(request, 'Las contraseñas no coinciden')
+                elif len(password) < 8:
+                    messages.error(request, 'La contraseña debe tener al menos 8 caracteres')
+                elif not any(c.isupper() for c in password):
+                    messages.error(request, 'La contraseña debe contener al menos una letra mayúscula')
+                elif not any(c.isdigit() for c in password):
+                    messages.error(request, 'La contraseña debe contener al menos un número')
+                else:
+                    usuario.set_password(password)
+                    usuario.debe_cambiar_clave = False
+                    usuario.save(update_fields=['password', 'debe_cambiar_clave'])
+                    messages.success(request, 'Contraseña actualizada. ¡Bienvenido!')
+                    return redirect('dashboard:home')
+            # Mostrar formulario de cambio de clave sin token
+            context = {
+                'token': None,
+                'usuario': usuario,
+                'primer_ingreso': True,
+            }
+            return render(request, 'dashboard/reset_password.html', context)
+        # Si no requiere cambio, envía a home
+        return redirect('dashboard:home')
+    
     if not token_str:
         messages.error(request, 'Token de recuperación no válido')
         return redirect('dashboard:login')
