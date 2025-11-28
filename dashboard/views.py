@@ -1434,8 +1434,51 @@ def exportar_productos_excel(request):
     
     try:
         from productos.models import Producto
-        
-        # Crear libro de Excel
+
+        # 1) Construir queryset respetando filtros y orden del listado
+        productos = Producto.objects.all()
+
+        # Filtro de búsqueda (igual que en productos.views.lista_productos)
+        search = request.GET.get('search', '')
+        if search:
+            productos = (productos.filter(nombre__icontains=search)
+                         | productos.filter(descripcion__icontains=search)
+                         | productos.filter(precio_referencia__icontains=search))
+
+        # Ordenamiento
+        order_by = request.GET.get('order_by', 'id_producto')
+        order_direction = request.GET.get('order_direction', 'desc')
+        if order_direction == 'desc':
+            order_field = f'-{order_by}' if not order_by.startswith('-') else order_by
+        else:
+            order_field = order_by.replace('-', '')
+        productos = productos.order_by(order_field)
+
+        # Paginación: por defecto usar el valor en sesión; si viene por GET, priorizarlo
+        per_page_param = request.GET.get('per_page')
+        if per_page_param:
+            try:
+                per_page = int(per_page_param)
+            except ValueError:
+                per_page = 10
+        else:
+            per_page = request.session.get('productos_per_page', 10)
+
+        page_param = request.GET.get('page', '1')
+        try:
+            current_page = int(page_param)
+        except ValueError:
+            current_page = 1
+
+        # Si se recibe all=true exportar todo ignorando paginación
+        export_all = request.GET.get('all', 'false').lower() in ['true', '1', 'yes']
+
+        if not export_all:
+            paginator = Paginator(productos, per_page)
+            page_obj = paginator.get_page(current_page)
+            productos = page_obj.object_list
+
+        # 2) Crear libro de Excel
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = "Productos"
@@ -1460,10 +1503,7 @@ def exportar_productos_excel(request):
             cell.alignment = Alignment(horizontal='center', vertical='center')
             cell.border = border
         
-        # Obtener productos
-        productos = Producto.objects.all().order_by('nombre')
-        
-        # Llenar datos
+        # 3) Llenar datos
         for row_num, producto in enumerate(productos, 2):
             ws.cell(row=row_num, column=1).value = producto.id_producto
             ws.cell(row=row_num, column=2).value = producto.nombre
@@ -1483,12 +1523,13 @@ def exportar_productos_excel(request):
         for col_num, width in enumerate(column_widths, 1):
             ws.column_dimensions[openpyxl.utils.get_column_letter(col_num)].width = width
         
-        # Crear respuesta HTTP
+        # 4) Crear respuesta HTTP
         response = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
         fecha_actual = datetime.now().strftime('%Y%m%d_%H%M%S')
-        response['Content-Disposition'] = f'attachment; filename=productos_{fecha_actual}.xlsx'
+        nombre_archivo = f"productos_{'todos_' if export_all else ''}{fecha_actual}.xlsx"
+        response['Content-Disposition'] = f'attachment; filename={nombre_archivo}'
         
         # Guardar y devolver
         wb.save(response)

@@ -851,18 +851,22 @@
     function exportToExcel() {
         Swal.fire({
             title: 'Exportando a Excel...',
-            text: 'Generando archivo de productos...',
+            text: 'Generando archivo según filtros y página actual...',
             allowOutsideClick: false,
             showConfirmButton: false,
             willOpen: () => {
                 Swal.showLoading();
             }
         });
-        
+
+        // Construir URL de exportación con los mismos parámetros de la vista actual
+        const current = new URL(window.location.href);
+        const exportUrl = new URL('{% url "dashboard:exportar_productos_excel" %}', window.location.origin);
+        exportUrl.search = current.search; // Copia search, page, per_page, order_by, order_direction
+
         // Descargar archivo
-        const url = '{% url "dashboard:exportar_productos_excel" %}';
-        window.location.href = url;
-        
+        window.location.href = exportUrl.toString();
+
         // Cerrar loading después de un momento
         setTimeout(() => {
             Swal.close();
@@ -873,7 +877,7 @@
                 confirmButtonColor: '#dc2626',
                 timer: 2000
             });
-        }, 1000);
+        }, 800);
     }
     
     // Función auxiliar para obtener cookie CSRF
