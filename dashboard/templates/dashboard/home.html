@@ -1,7 +1,7 @@
 ﻿{% extends 'dashboard/base.html' %}
 {% load static %}
 
-{% block title %}Dashboard - DulcerÃ­a Lilis{% endblock %}
+{% block title %}Dashboard - Dulcería Lilis{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -68,9 +68,9 @@
     <div class="dashboard-welcome">
         <div class="row align-items-center">
             <div class="col-md-8">
-                <h1 class="fw-bold mb-2">Â¡Bienvenido, {{ user.first_name|default:user.username }}!</h1>
+                <h1 class="fw-bold mb-2">¡Bienvenido, {{ user.first_name|default:user.username }}!</h1>
                 <p class="mb-0 opacity-90">
-                    Gestiona eficientemente tu dulcerÃ­a con nuestro sistema integral
+                    Gestiona eficientemente tu dulcería con nuestro sistema integral
                 </p>
             </div>
             <div class="col-md-4 text-end">
@@ -143,7 +143,7 @@
         <div class="col-12">
             <h3 class="fw-bold text-dark mb-3">
                 <i class="bi bi-lightning-fill text-lilis-blue me-2"></i>
-                Acciones RÃ¡pidas
+                Acciones Rápidas
             </h3>
         </div>
         
@@ -155,7 +155,7 @@
                         <i class="bi bi-list-check"></i>
                     </div>
                     <h6 class="fw-bold">Gestionar Productos</h6>
-                    <p class="text-muted small mb-0">Administra el catÃ¡logo de productos</p>
+                    <p class="text-muted small mb-0">Administra el catálogo de productos</p>
                 </div>
             </div>
         </div>
@@ -181,7 +181,7 @@
                         <i class="bi bi-box-seam"></i>
                     </div>
                     <h6 class="fw-bold">Gestionar Inventario</h6>
-                    <p class="text-muted small mb-0">Administra el stock del almacÃ©n</p>
+                    <p class="text-muted small mb-0">Administra el stock del almacén</p>
                 </div>
             </div>
         </div>
@@ -243,7 +243,7 @@
                         <i class="bi bi-building-fill-add"></i>
                     </div>
                     <h6 class="fw-bold">Nuevo Proveedor</h6>
-                    <p class="text-muted small mb-0">AÃ±ade un nuevo proveedor</p>
+                    <p class="text-muted small mb-0">Añade un nuevo proveedor</p>
                 </div>
             </div>
         </div>
@@ -268,7 +268,7 @@
         <div class="col-12">
             <h4 class="fw-bold text-dark mb-3">
                 <i class="bi bi-gear-fill text-lilis-green me-2"></i>
-                AdministraciÃ³n del Sistema
+                Administración del Sistema
             </h4>
         </div>
         
@@ -327,7 +327,7 @@
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
                                     <h6 class="mb-1">Producto agregado</h6>
-                                    <p class="text-muted small mb-1">Se agregÃ³ "Chocolates Premium" al catÃ¡logo</p>
+                                    <p class="text-muted small mb-1">Se agregó "Chocolates Premium" al catálogo</p>
                                     <small class="text-muted">Hace 2 horas</small>
                                 </div>
                                 <i class="bi bi-plus-circle text-success"></i>
@@ -349,7 +349,7 @@
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
                                     <h6 class="mb-1">Nuevo proveedor</h6>
-                                    <p class="text-muted small mb-1">Se registrÃ³ "Dulces SA" como proveedor</p>
+                                    <p class="text-muted small mb-1">Se registró "Dulces SA" como proveedor</p>
                                     <small class="text-muted">Ayer</small>
                                 </div>
                                 <i class="bi bi-building text-warning"></i>
@@ -402,7 +402,7 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="mb-1">Chocolates Premium</h6>
-                                    <small class="text-muted">Stock: 5 unidades (MÃ­n: 20)</small>
+                                    <small class="text-muted">Stock: 5 unidades (Mín: 20)</small>
                                 </div>
                                 <span class="badge bg-warning">Bajo</span>
                             </div>
@@ -412,7 +412,7 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="mb-1">Galletas Oreo</h6>
-                                    <small class="text-muted">Stock: 0 unidades (MÃ­n: 15)</small>
+                                    <small class="text-muted">Stock: 0 unidades (Mín: 15)</small>
                                 </div>
                                 <span class="badge bg-danger">Agotado</span>
                             </div>
@@ -422,7 +422,7 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="mb-1">Caramelos Mix</h6>
-                                    <small class="text-muted">Stock: 8 unidades (MÃ­n: 25)</small>
+                                    <small class="text-muted">Stock: 8 unidades (Mín: 25)</small>
                                 </div>
                                 <span class="badge bg-warning">Bajo</span>
                             </div>
@@ -446,7 +446,7 @@
                 <div class="lilis-card-header">
                     <h5 class="lilis-card-title mb-0">
                         <i class="bi bi-graph-up text-success me-2"></i>
-                        Resumen de Ventas (Ãšltimos 7 dÃ­as)
+                        Resumen de Ventas (Últimos 7 días)
                     </h5>
                 </div>
                 <div class="lilis-card-body">
@@ -454,7 +454,7 @@
                         <div class="d-flex align-items-center justify-content-center h-100 text-muted">
                             <div class="text-center">
                                 <i class="bi bi-bar-chart display-4 mb-3"></i>
-                                <p>GrÃ¡fico de ventas</p>
+                                <p>Gráfico de ventas</p>
                                 <small>Funcionalidad en desarrollo</small>
                             </div>
                         </div>
@@ -541,7 +541,7 @@
             });
         });
         
-        // Agregar event listeners para las tarjetas de acciÃ³n rÃ¡pida
+        // Agregar event listeners para las tarjetas de acción rápida
         document.querySelectorAll('.quick-action-card[data-url], button[data-url]').forEach(element => {
             element.addEventListener('click', function() {
                 window.location.href = this.dataset.url;
