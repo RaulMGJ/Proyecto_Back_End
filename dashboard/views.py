@@ -197,6 +197,37 @@ def home(request):
     
     return render(request, 'dashboard/home.html', context)
 
+
+@login_required
+def auditorias_view(request):
+    """Vista de lista completa de auditorías"""
+    auditorias = Auditoria.objects.select_related('usuario').order_by('-fecha_hora')
+    
+    # Filtros opcionales
+    accion = request.GET.get('accion')
+    entidad = request.GET.get('entidad')
+    usuario_id = request.GET.get('usuario')
+    
+    if accion:
+        auditorias = auditorias.filter(accion=accion)
+    if entidad:
+        auditorias = auditorias.filter(entidad__icontains=entidad)
+    if usuario_id:
+        auditorias = auditorias.filter(usuario_id=usuario_id)
+    
+    # Paginación
+    from django.core.paginator import Paginator
+    paginator = Paginator(auditorias, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'page_obj': page_obj,
+        'total': auditorias.count(),
+    }
+    
+    return render(request, 'dashboard/auditorias.html', context)
+
 @login_required
 @never_cache
 def productos_view(request):
@@ -824,7 +855,8 @@ def usuarios_view(request):
                 'telefono': u.telefono or '',
                 'rol': u.id_rol.nombre if u.id_rol else '',
                 'is_active': u.is_active,
-                'last_login': u.last_login.strftime('%d/%m/%Y %H:%M') if u.last_login else 'Nunca'
+                'last_login': u.last_login.strftime('%d/%m/%Y %H:%M') if u.last_login else 'Nunca',
+                'debe_cambiar_clave': getattr(u, 'debe_cambiar_clave', False)
             })
         return JsonResponse({
             'success': True,

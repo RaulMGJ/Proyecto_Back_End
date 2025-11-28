@@ -674,6 +674,9 @@
                 <td><span class="lilis-badge lilis-badge-info">${u.rol}</span></td>
                 <td>${estadoBadge}</td>
                 <td><small class="text-muted">${lastLogin}</small></td>
+                <td class="text-center">
+                    ${u.debe_cambiar_clave ? '<span class="badge bg-warning"><i class="bi bi-exclamation-triangle"></i> Pendiente</span>' : '<span class="badge bg-success"><i class="bi bi-check-circle"></i> OK</span>'}
+                </td>
                 <td>
                     <div class="user-actions">
                         <button class="btn btn-outline-primary btn-sm" onclick="editUser('${u.id}')" title="Editar"><i class="bi bi-pencil"></i></button>

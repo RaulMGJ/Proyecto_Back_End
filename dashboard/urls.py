@@ -14,6 +14,7 @@ urlpatterns = [
     path('usuarios/obtener/<int:usuario_id>/', login_required(views.obtener_usuario), name='obtener_usuario'),
     path('usuarios/guardar/', login_required(views.guardar_usuario), name='guardar_usuario'),
     path('usuarios/reset-password/<int:usuario_id>/', login_required(views.reset_usuario_password), name='reset_usuario_password'),
+    path('auditorias/', login_required(views.auditorias_view), name='auditorias'),
     path('usuarios/eliminar/<int:usuario_id>/', login_required(views.eliminar_usuario), name='eliminar_usuario'),
     path('usuarios/cambiar-estado/<int:usuario_id>/', login_required(views.cambiar_estado_usuario), name='cambiar_estado_usuario'),
     path('usuarios/exportar-excel/', login_required(views.exportar_usuarios_excel), name='exportar_usuarios_excel'),
