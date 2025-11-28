@@ -296,16 +296,8 @@
                             </div>
 
                             <div class="form-field">
-                                <label class="form-label">razón_social <span class="text-muted">(requerida)</span></label>
-                                <input type="text" class="form-input" name="razon_social" placeholder="Proveedor S.A.">
-                            </div>
-
-                            <div class="form-field">
-                                <label class="form-label">nombre_fantasía <span class="text-muted">(opcional)</span></label>
-                                {{ form.nombre }}
-                                {% if form.nombre.errors %}
-                                    <div class="text-danger small mt-1">{{ form.nombre.errors.0 }}</div>
-                                {% endif %}
+                                <label class="form-label">Nombre del Proveedor <span class="text-danger">*</span></label>
+                                <input type="text" class="form-input" name="nombre" placeholder="Nombre del proveedor" required>
                             </div>
 
                             <div class="row">
@@ -333,11 +325,8 @@
                             </div>
 
                             <div class="form-field">
-                                <label class="form-label">contacto_fut_proveedor <span class="text-muted">(opcional)</span></label>
-                                {{ form.contacto }}
-                                {% if form.contacto.errors %}
-                                    <div class="text-danger small mt-1">{{ form.contacto.errors.0 }}</div>
-                                {% endif %}
+                                <label class="form-label">Persona de Contacto <span class="text-danger">*</span></label>
+                                <input type="text" class="form-input" name="contacto" placeholder="Nombre del contacto" required>
                             </div>
                         </div>
 
@@ -347,10 +336,7 @@
                             
                             <div class="form-field">
                                 <label class="form-label">Dirección <span class="text-danger">*</span></label>
-                                {{ form.direccion }}
-                                {% if form.direccion.errors %}
-                                    <div class="text-danger small mt-1">{{ form.direccion.errors.0 }}</div>
-                                {% endif %}
+                                <textarea class="form-input" name="direccion" placeholder="Dirección completa" rows="3" required></textarea>
                             </div>
 
                             <div class="row">
