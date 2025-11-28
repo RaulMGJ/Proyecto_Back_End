@@ -38,28 +38,38 @@ class ForcePasswordChangeMiddleware:
     def __call__(self, request):
         user = getattr(request, 'user', None)
         if user and user.is_authenticated and getattr(user, 'debe_cambiar_clave', False):
-            path = request.path
-            # Rutas permitidas mientras cambia la contraseña
-            allowed_prefixes = [
-                '/reset-password',
-                '/dashboard/reset-password',
-                '/login',
-                '/logout',
-                '/static/',
-                '/forgot-password',
-                '/admin/logout/',  # permitir salir si está en admin
-            ]
-            if not any(path.startswith(pref) for pref in allowed_prefixes):
-                # Respuesta especial para AJAX
+            path = request.path or ''
+            # Normalizar sin querystring ni fragmento
+            # Rutas permitidas únicamente: páginas de login y reset
+            allowed_exact = {
+                '/login/', '/login',
+                '/logout/', '/logout',
+                '/reset-password/', '/reset-password',
+                '/dashboard/reset-password/', '/dashboard/reset-password',
+                '/forgot-password/', '/forgot-password',
+                '/admin/logout/', '/admin/logout'
+            }
+            # Permitir recursos estáticos
+            if path.startswith('/static/'):
+                return self.get_response(request)
+            # Si no está en lista exacta de permitidos para el flujo, redirigir
+            if path not in allowed_exact:
+                # Construir URL destino robusta (namespaced si existe)
+                from django.urls import reverse, NoReverseMatch
+                try:
+                    reset_url = reverse('dashboard:reset_password')
+                except NoReverseMatch:
+                    try:
+                        reset_url = reverse('reset_password')
+                    except NoReverseMatch:
+                        reset_url = '/reset-password/'
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     from django.http import JsonResponse
-                    from django.urls import reverse
                     return JsonResponse({
                         'success': False,
                         'must_change_password': True,
-                        'redirect': reverse('reset_password'),
+                        'redirect': reset_url,
                         'message': 'Debes cambiar tu contraseña antes de continuar.'
                     }, status=403)
-                from django.urls import reverse
-                return redirect(reverse('reset_password'))
+                return redirect(reset_url)
         return self.get_response(request)
