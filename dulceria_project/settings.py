@@ -183,6 +183,14 @@ SESSION_COOKIE_HTTPONLY = True  # Protege contra XSS (JavaScript no puede accede
 SESSION_COOKIE_SECURE = False   # False porque usamos HTTP (sin HTTPS)
 SESSION_COOKIE_SAMESITE = None  # None para permitir autenticación cross-origin
 
+# CSRF y cookies
+# Para pruebas de carga concurrente y orígenes externos, configura CSRF_TRUSTED_ORIGINS en .env
+# Ejemplo: CSRF_TRUSTED_ORIGINS=http://23.23.159.25,http://localhost
+csrf_trusted = config('CSRF_TRUSTED_ORIGINS', default='').strip()
+CSRF_TRUSTED_ORIGINS = [h.strip() for h in csrf_trusted.split(',') if h.strip()]
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = False  # Cambiar a True cuando el sitio use HTTPS
+
 # --- IMPORTANTE ---
 # Cuando pongas el sitio en producción con HTTPS, cambia a:
 # SESSION_COOKIE_SECURE = True
