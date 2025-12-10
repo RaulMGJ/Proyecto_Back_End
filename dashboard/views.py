@@ -8,6 +8,8 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.core.exceptions import PermissionDenied
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
+from django.db import transaction
+from django.db.models import F
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.core.mail import send_mail
@@ -68,7 +70,7 @@ from datetime import datetime
 from django.contrib.auth.hashers import make_password
 from django.conf import settings
 from productos.models import Producto
-from inventarios.models import Inventario
+from inventarios.models import Inventario, MovimientoInventario
 from usuarios.models import Usuario, PasswordResetToken
 from .forms import ProductoForm, InventarioForm
 
@@ -442,19 +444,28 @@ def inventarios_view(request):
     paginator = Paginator(inventarios_qs, per_page)
     page = request.GET.get('page', 1)
     inventarios = paginator.get_page(page)
+
+    # Estadísticas de stock
+    stock_bajo = inventarios_qs.filter(cantidad_actual__lt=F('stock_minimo')).count()
+    stock_medio = inventarios_qs.filter(cantidad_actual__gte=F('stock_minimo'), cantidad_actual__lt=F('stock_minimo') * 2).count()
+    stock_alto = max(inventarios_qs.count() - stock_bajo - stock_medio, 0)
+
+    # Movimientos recientes
+    movimientos_recientes = MovimientoInventario.objects.select_related('inventario', 'inventario__id_producto', 'usuario').order_by('-fecha_hora')[:20]
     context = {
         'inventarios': inventarios,
         'proveedores': proveedores,
         'total_productos': inventarios_qs.count(),
-        'stock_alto': 0,  # Calcular basado en lógica de stock
-        'stock_medio': 0,
-        'stock_bajo': 0,
+        'stock_alto': stock_alto,
+        'stock_medio': stock_medio,
+        'stock_bajo': stock_bajo,
         'today': now.date(),
         'user': request.user,
         'es_vendedor': es_vendedor,
         'es_bodeguero': es_bodeguero,
         'puede_editar': puede_editar,
         'per_page': per_page,
+        'movimientos_recientes': movimientos_recientes,
     }
     return render(request, 'dashboard/inventarios.html', context)
 
@@ -670,6 +681,79 @@ def editar_inventario(request, inventario_id):
         'inventario': inventario
     }
     return render(request, 'dashboard/form_inventario.html', context)
+
+
+@login_required
+@never_cache
+@require_POST
+def registrar_movimiento_inventario(request):
+    """Registrar entrada o salida de inventario y dejar traza de movimiento"""
+    user = request.user
+    rol_nombre = user.id_rol.nombre if hasattr(user, 'id_rol') and user.id_rol else None
+
+    if not (user.is_superuser or rol_nombre in ['Administrador', 'Bodeguero']):
+        return JsonResponse({'success': False, 'message': 'No tienes permisos para registrar movimientos'}, status=403)
+
+    tipo = (request.POST.get('tipo_movimiento') or request.POST.get('tipo') or '').lower()
+    inventario_id = request.POST.get('producto') or request.POST.get('inventario_id')
+    proveedor = (request.POST.get('proveedor') or '').strip()
+    motivo = (request.POST.get('observaciones') or '').strip()
+
+    try:
+        cantidad = int(request.POST.get('cantidad') or 0)
+    except (TypeError, ValueError):
+        return JsonResponse({'success': False, 'message': 'Cantidad inválida'}, status=400)
+
+    if tipo not in ['entrada', 'salida']:
+        return JsonResponse({'success': False, 'message': 'Tipo de movimiento inválido'}, status=400)
+    if not inventario_id:
+        return JsonResponse({'success': False, 'message': 'Inventario no especificado'}, status=400)
+    if cantidad <= 0:
+        return JsonResponse({'success': False, 'message': 'La cantidad debe ser mayor a cero'}, status=400)
+
+    try:
+        with transaction.atomic():
+            inventario = Inventario.objects.select_for_update().get(id_inventario=inventario_id)
+
+            if tipo == 'salida' and cantidad > inventario.cantidad_actual:
+                return JsonResponse({'success': False, 'message': 'La salida supera el stock disponible'}, status=400)
+
+            if tipo == 'entrada':
+                inventario.cantidad_actual += cantidad
+            else:
+                inventario.cantidad_actual -= cantidad
+
+            inventario.save(update_fields=['cantidad_actual', 'fecha_ultima_actualizacion'])
+
+            movimiento = MovimientoInventario.objects.create(
+                inventario=inventario,
+                usuario=user,
+                tipo=tipo,
+                cantidad=cantidad,
+                proveedor=proveedor,
+                motivo=motivo,
+                detalle=motivo,
+                stock_resultante=inventario.cantidad_actual,
+            )
+
+            Auditoria.objects.create(
+                usuario=user,
+                accion='MOVIMIENTO',
+                entidad='Inventario',
+                detalle=f"{tipo.upper()} {cantidad} - InvID:{inventario.id_inventario} ({inventario.id_producto.nombre}) - Stock:{inventario.cantidad_actual}"
+            )
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Movimiento registrado',
+            'stock_actual': inventario.cantidad_actual,
+            'movimiento_id': movimiento.id_movimiento,
+            'tipo': tipo,
+        })
+    except Inventario.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Inventario no encontrado'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
 def forgot_password_view(request):
     """Vista para recuperación de contraseña"""

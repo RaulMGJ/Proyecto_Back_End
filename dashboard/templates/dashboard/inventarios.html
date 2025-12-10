@@ -393,51 +393,46 @@
                 
                 <div class="lilis-card-body">
                     <div class="row g-3" id="movementsList">
-                        <!-- Ejemplo de movimientos -->
-                        <div class="col-12">
-                            <div class="d-flex align-items-center p-3 border rounded">
-                                <div class="movement-icon movement-in me-3">
-                                    <i class="bi bi-arrow-down"></i>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <h6 class="mb-1">Entrada de Chocolates</h6>
-                                            <small class="text-muted">Por: Usuario Admin • Hoy 14:30</small>
-                                        </div>
-                                        <div class="text-end">
-                                            <div class="fw-bold text-success">+50 unidades</div>
-                                            <small class="text-muted">Stock actual: 150</small>
+                        {% if movimientos_recientes %}
+                            {% for mov in movimientos_recientes %}
+                            <div class="col-12">
+                                <div class="d-flex align-items-center p-3 border rounded">
+                                    <div class="movement-icon {% if mov.tipo == 'entrada' %}movement-in{% else %}movement-out{% endif %} me-3">
+                                        {% if mov.tipo == 'entrada' %}
+                                            <i class="bi bi-arrow-down"></i>
+                                        {% else %}
+                                            <i class="bi bi-arrow-up"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    {% if mov.tipo == 'entrada' %}Entrada{% else %}Salida{% endif %} de {{ mov.inventario.id_producto.nombre }}
+                                                </h6>
+                                                <small class="text-muted">
+                                                    {{ mov.fecha_hora|date:'Y-m-d H:i' }}
+                                                    {% if mov.usuario %} • Por: {{ mov.usuario.nombre|default:mov.usuario.username }}{% endif %}
+                                                    {% if mov.motivo %} • {{ mov.motivo }}{% endif %}
+                                                </small>
+                                            </div>
+                                            <div class="text-end">
+                                                <div class="fw-bold {% if mov.tipo == 'entrada' %}text-success{% else %}text-danger{% endif %}">
+                                                    {% if mov.tipo == 'entrada' %}+{% else %}-{% endif %}{{ mov.cantidad }} unidades
+                                                </div>
+                                                <small class="text-muted">Stock actual: {{ mov.stock_resultante }}</small>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="col-12">
-                            <div class="d-flex align-items-center p-3 border rounded">
-                                <div class="movement-icon movement-out me-3">
-                                    <i class="bi bi-arrow-up"></i>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <h6 class="mb-1">Venta de Caramelos</h6>
-                                            <small class="text-muted">Venta #001 • Hoy 12:15</small>
-                                        </div>
-                                        <div class="text-end">
-                                            <div class="fw-bold text-danger">-25 unidades</div>
-                                            <small class="text-muted">Stock actual: 75</small>
-                                        </div>
-                                    </div>
-                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4" id="noMovements">
+                                <i class="bi bi-clock-history display-4 text-muted mb-3"></i>
+                                <h6 class="text-muted">No hay movimientos registrados todavía</h6>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div class="text-center py-4" id="noMovements" style="display: none;">
-                        <i class="bi bi-clock-history display-4 text-muted mb-3"></i>
-                        <h6 class="text-muted">No hay movimientos en el período seleccionado</h6>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -552,7 +547,7 @@
                                 <option value="">Seleccionar producto...</option>
                                 {% for inventario in inventarios %}
                                 <option value="{{ inventario.id_inventario }}">
-                                    {{ inventario.id_producto.nombre }} (Stock: {{ inventario.stock_actual|default:0 }})
+                                    {{ inventario.id_producto.nombre }} (Stock: {{ inventario.cantidad_actual|default:0 }})
                                 </option>
                                 {% endfor %}
                             </select>
@@ -624,25 +619,43 @@
         LilisSystem.showAlert(`Viendo detalles del inventario ${inventoryId}`, 'info');
     }
     
-    function submitMovement() {
+    async function submitMovement() {
         const form = document.getElementById('movementForm');
         const formData = new FormData(form);
-        
-        // Validation
+        const tipo = document.getElementById('movementType').value || 'entrada';
+        formData.set('tipo_movimiento', tipo);
+
         if (!formData.get('producto') || !formData.get('cantidad')) {
-            LilisSystem.showAlert('Por favor completa todos los campos requeridos', 'warning');
+            LilisSystem.showAlert('Por favor completa producto y cantidad', 'warning');
             return;
         }
-        
-        LilisSystem.showAlert('Registrando movimiento...', 'info');
-        
-        // Simulate API call
-        setTimeout(() => {
-            LilisSystem.showAlert('Movimiento registrado exitosamente', 'success');
+
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        try {
+            LilisSystem.showAlert('Registrando movimiento...', 'info');
+            const response = await fetch("{% url 'dashboard:registrar_movimiento_inventario' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken || ''
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                const msg = data && data.message ? data.message : 'No se pudo registrar el movimiento';
+                LilisSystem.showAlert(msg, 'danger');
+                return;
+            }
+
+            LilisSystem.showAlert('Movimiento registrado', 'success');
             bootstrap.Modal.getInstance(document.getElementById('movementModal')).hide();
             form.reset();
-            refreshInventory();
-        }, 1500);
+            setTimeout(() => window.location.reload(), 400);
+        } catch (err) {
+            console.error(err);
+            LilisSystem.showAlert('Error inesperado al registrar el movimiento', 'danger');
+        }
     }
     
     function refreshInventory() {

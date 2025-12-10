@@ -1,5 +1,7 @@
 from django.db import models
 from productos.models import Producto
+from django.conf import settings
+from django.utils import timezone
 
 class Inventario(models.Model):
     id_inventario = models.AutoField(primary_key=True)
@@ -40,3 +42,31 @@ class Inventario(models.Model):
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
+
+
+class MovimientoInventario(models.Model):
+    TIPO_CHOICES = (
+        ('entrada', 'Entrada'),
+        ('salida', 'Salida'),
+    )
+
+    id_movimiento = models.AutoField(primary_key=True)
+    inventario = models.ForeignKey(Inventario, on_delete=models.CASCADE, related_name='movimientos')
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
+    cantidad = models.PositiveIntegerField()
+    proveedor = models.CharField(max_length=255, blank=True)
+    motivo = models.CharField(max_length=255, blank=True)
+    detalle = models.TextField(blank=True)
+    stock_resultante = models.IntegerField()
+    fecha_hora = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = 'movimiento_inventario'
+        ordering = ['-fecha_hora']
+        verbose_name = 'Movimiento de Inventario'
+        verbose_name_plural = 'Movimientos de Inventario'
+
+    def __str__(self):
+        signo = '+' if self.tipo == 'entrada' else '-'
+        return f"{self.get_tipo_display()} {signo}{self.cantidad} de {self.inventario.id_producto.nombre}"

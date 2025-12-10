@@ -29,6 +29,7 @@ urlpatterns = [
     path('inventarios/agregar/', login_required(views.agregar_inventario), name='agregar_inventario'),
     path('inventarios/editar/<int:inventario_id>/', login_required(views.editar_inventario), name='editar_inventario'),
     path('inventarios/eliminar/<int:inventario_id>/', login_required(views.eliminar_inventario), name='eliminar_inventario'),
+    path('inventarios/movimiento/', login_required(views.registrar_movimiento_inventario), name='registrar_movimiento_inventario'),
     path('proveedores/', login_required(views.proveedores_view), name='proveedores'),
     path('ventas/', login_required(views.ventas_view), name='ventas'),
 ]
