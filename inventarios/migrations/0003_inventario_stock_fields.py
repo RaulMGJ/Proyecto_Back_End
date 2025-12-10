@@ -9,15 +9,34 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='inventario',
-            name='stock_minimo',
-            field=models.IntegerField(default=0, verbose_name='Stock Mínimo', help_text='Cantidad mínima requerida en inventario'),
-            preserve_default=False,
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunSQL(
+                    sql="ALTER TABLE inventario ADD COLUMN IF NOT EXISTS stock_minimo INTEGER NOT NULL DEFAULT 0;",
+                    reverse_sql="ALTER TABLE inventario DROP COLUMN IF EXISTS stock_minimo;",
+                ),
+            ],
+            state_operations=[
+                migrations.AddField(
+                    model_name='inventario',
+                    name='stock_minimo',
+                    field=models.IntegerField(verbose_name='Stock Mínimo', help_text='Cantidad mínima requerida en inventario'),
+                ),
+            ],
         ),
-        migrations.AddField(
-            model_name='inventario',
-            name='stock_maximo',
-            field=models.IntegerField(blank=True, help_text='Cantidad máxima permitida (opcional)', null=True, verbose_name='Stock Máximo'),
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunSQL(
+                    sql="ALTER TABLE inventario ADD COLUMN IF NOT EXISTS stock_maximo INTEGER NULL;",
+                    reverse_sql="ALTER TABLE inventario DROP COLUMN IF EXISTS stock_maximo;",
+                ),
+            ],
+            state_operations=[
+                migrations.AddField(
+                    model_name='inventario',
+                    name='stock_maximo',
+                    field=models.IntegerField(blank=True, null=True, verbose_name='Stock Máximo', help_text='Cantidad máxima permitida (opcional)'),
+                ),
+            ],
         ),
     ]
