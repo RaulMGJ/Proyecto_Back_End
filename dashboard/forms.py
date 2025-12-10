@@ -61,6 +61,15 @@ class ProductoForm(forms.ModelForm):
         self.fields['descripcion'].required = False
         self.fields['precio_referencia'].label = 'Precio de Venta'
         self.fields['unidad_medida'].label = 'Unidad de Medida'
+
+    def clean_precio_referencia(self):
+        """Evitar precios negativos o cero en el formulario."""
+        precio = self.cleaned_data.get('precio_referencia')
+        if precio is None:
+            raise forms.ValidationError('El precio es obligatorio')
+        if precio < 0:
+            raise forms.ValidationError('El precio no puede ser negativo')
+        return precio
     
     def clean_unidad_compra(self):
         """F-PROD-VAL-04: Validar que unidad_compra no esté vacía"""
@@ -122,6 +131,14 @@ class InventarioForm(forms.ModelForm):
             self.fields['id_producto'].queryset = Producto.objects.exclude(
                 id_producto__in=productos_con_inventario
             )
+
+    def clean_cantidad_actual(self):
+        cantidad = self.cleaned_data.get('cantidad_actual')
+        if cantidad is None:
+            raise forms.ValidationError('La cantidad actual es obligatoria')
+        if cantidad < 0:
+            raise forms.ValidationError('La cantidad actual no puede ser negativa')
+        return cantidad
     
     def clean_stock_minimo(self):
         """F-PROD-VAL-05: Validar que stock_minimo no esté vacío"""
@@ -131,6 +148,12 @@ class InventarioForm(forms.ModelForm):
         if stock_min < 0:
             raise forms.ValidationError('El stock mínimo no puede ser negativo')
         return stock_min
+
+    def clean_stock_maximo(self):
+        stock_max = self.cleaned_data.get('stock_maximo')
+        if stock_max is not None and stock_max < 0:
+            raise forms.ValidationError('El stock máximo no puede ser negativo')
+        return stock_max
     
     def clean(self):
         cleaned_data = super().clean()
